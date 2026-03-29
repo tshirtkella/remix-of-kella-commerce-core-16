@@ -54,7 +54,7 @@ const Settings = () => {
   const { data: currency, isLoading: currLoading } = useQuery({
     queryKey: ["store-currency"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("store_settings")
         .select("value")
         .eq("key", "currency")
