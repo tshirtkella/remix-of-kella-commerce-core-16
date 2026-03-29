@@ -219,6 +219,7 @@ const ProductForm = () => {
         </CardContent>
       </Card>
 
+      <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-lg">Variants</CardTitle>
           <Button variant="outline" size="sm" onClick={addVariant}>
