@@ -414,7 +414,7 @@ const Dashboard = () => {
           <CardContent>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {topProducts?.map((product) => (
-                <div key={product.id} className="rounded-xl border border-border overflow-hidden hover:shadow-md transition-shadow">
+                <Link to={`/admin/products/${product.id}`} key={product.id} className="rounded-xl border border-border overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
                   <div className="h-32 bg-muted flex items-center justify-center">
                     {product.images?.[0]?.url ? (
                       <img src={product.images[0].url} alt={product.name} className="h-full w-full object-cover" />
