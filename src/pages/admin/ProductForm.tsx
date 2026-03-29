@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Upload, X } from "lucide-react";
 
 interface VariantInput {
   size: string;
@@ -28,6 +28,8 @@ const ProductForm = () => {
   const [description, setDescription] = useState("");
   const [basePrice, setBasePrice] = useState("");
   const [categoryId, setCategoryId] = useState("");
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [variants, setVariants] = useState<VariantInput[]>([
     { size: "M", color: "Black", sku: "", inventory_quantity: 0, price_override: "" },
   ]);
@@ -60,6 +62,21 @@ const ProductForm = () => {
     setVariants(updated);
   };
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    setImageFiles((prev) => [...prev, ...files]);
+    files.forEach((f) => {
+      const reader = new FileReader();
+      reader.onload = (ev) => setImagePreviews((prev) => [...prev, ev.target?.result as string]);
+      reader.readAsDataURL(f);
+    });
+  };
+
+  const removeImage = (index: number) => {
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const createMutation = useMutation({
     mutationFn: async () => {
       const { data: product, error: pErr } = await supabase
@@ -88,6 +105,29 @@ const ProductForm = () => {
 
         const { error: vErr } = await supabase.from("variants").insert(variantRows);
         if (vErr) throw vErr;
+      }
+
+      // Upload images
+      for (let i = 0; i < imageFiles.length; i++) {
+        const file = imageFiles[i];
+        const ext = file.name.split(".").pop();
+        const path = `${product.id}/${Date.now()}-${i}.${ext}`;
+
+        const { error: upErr } = await supabase.storage
+          .from("product-images")
+          .upload(path, file);
+        if (upErr) throw upErr;
+
+        const { data: urlData } = supabase.storage
+          .from("product-images")
+          .getPublicUrl(path);
+
+        await supabase.from("images").insert({
+          product_id: product.id,
+          url: urlData.publicUrl,
+          alt_text: name,
+          position: i,
+        });
       }
 
       return product;
@@ -148,6 +188,33 @@ const ProductForm = () => {
                 ))}
               </select>
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Images</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-3">
+            {imagePreviews.map((src, i) => (
+              <div key={i} className="relative w-24 h-24 rounded-lg overflow-hidden border border-border group">
+                <img src={src} alt="" className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => removeImage(i)}
+                  className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+            <label className="flex flex-col items-center justify-center w-24 h-24 rounded-lg border-2 border-dashed border-border hover:border-primary cursor-pointer transition-colors">
+              <Upload className="h-5 w-5 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground mt-1">Upload</span>
+              <input type="file" accept="image/*" multiple onChange={handleImageSelect} className="hidden" />
+            </label>
           </div>
         </CardContent>
       </Card>

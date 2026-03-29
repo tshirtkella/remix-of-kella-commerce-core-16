@@ -1,11 +1,15 @@
 import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { Package, LayoutGrid, LogOut, Shirt } from "lucide-react";
+import { Package, LayoutGrid, LogOut, Shirt, ShoppingCart, Users, Settings, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
-  { to: "/admin", icon: Package, label: "Products" },
+  { to: "/admin", icon: BarChart3, label: "Dashboard", exact: true },
+  { to: "/admin/products", icon: Package, label: "Products" },
   { to: "/admin/categories", icon: LayoutGrid, label: "Categories" },
+  { to: "/admin/orders", icon: ShoppingCart, label: "Orders" },
+  { to: "/admin/customers", icon: Users, label: "Customers" },
+  { to: "/admin/settings", icon: Settings, label: "Settings" },
 ];
 
 const AdminLayout = () => {
@@ -24,7 +28,6 @@ const AdminLayout = () => {
 
   return (
     <div className="flex min-h-screen">
-      {/* Sidebar */}
       <aside className="w-60 bg-sidebar text-sidebar-foreground flex flex-col border-r border-sidebar-border">
         <div className="flex items-center gap-2 p-5 border-b border-sidebar-border">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary">
@@ -34,7 +37,9 @@ const AdminLayout = () => {
         </div>
         <nav className="flex-1 p-3 space-y-1">
           {navItems.map((item) => {
-            const active = location.pathname === item.to;
+            const active = item.exact
+              ? location.pathname === item.to
+              : location.pathname.startsWith(item.to);
             return (
               <Link
                 key={item.to}
@@ -62,8 +67,6 @@ const AdminLayout = () => {
           </Button>
         </div>
       </aside>
-
-      {/* Main */}
       <main className="flex-1 overflow-auto">
         <Outlet />
       </main>
