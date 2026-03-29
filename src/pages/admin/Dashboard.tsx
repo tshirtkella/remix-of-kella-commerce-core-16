@@ -406,7 +406,9 @@ const Dashboard = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-lg">Latest Products</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
+            <Button variant="ghost" size="sm" className="text-xs" onClick={() => navigate("/admin/products")}>
+              View All <ArrowUpRight className="h-3 w-3 ml-1" />
+            </Button>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
