@@ -193,6 +193,32 @@ const ProductForm = () => {
       </Card>
 
       <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Images</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-3">
+            {imagePreviews.map((src, i) => (
+              <div key={i} className="relative w-24 h-24 rounded-lg overflow-hidden border border-border group">
+                <img src={src} alt="" className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => removeImage(i)}
+                  className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+            <label className="flex flex-col items-center justify-center w-24 h-24 rounded-lg border-2 border-dashed border-border hover:border-primary cursor-pointer transition-colors">
+              <Upload className="h-5 w-5 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground mt-1">Upload</span>
+              <input type="file" accept="image/*" multiple onChange={handleImageSelect} className="hidden" />
+            </label>
+          </div>
+        </CardContent>
+      </Card>
+
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-lg">Variants</CardTitle>
           <Button variant="outline" size="sm" onClick={addVariant}>
