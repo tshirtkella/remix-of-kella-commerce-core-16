@@ -102,7 +102,7 @@ const Offers = () => {
         ends_at: payload.ends_at || null,
       };
       if (payload.id) {
-        const { error } = await supabase.from("offers").update(record).eq("id", payload.id);
+        const { error } = await (supabase as any).from("offers").update(record).eq("id", payload.id);
         if (error) throw error;
       } else {
         const { error } = await supabase.from("offers").insert(record);
