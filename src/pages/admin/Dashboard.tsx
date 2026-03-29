@@ -2,11 +2,13 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Package, ShoppingCart, Users, DollarSign, TrendingUp,
   TrendingDown, ArrowUpRight, CheckCircle2, XCircle, Clock,
   LayoutGrid,
 } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell,
@@ -20,6 +22,7 @@ const PIE_COLORS = [
 ];
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const { data: stats } = useQuery({
     queryKey: ["dashboard-stats"],
     queryFn: async () => {
@@ -333,7 +336,9 @@ const Dashboard = () => {
         <Card className="lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-lg">Order Activity</CardTitle>
-            <Badge variant="outline" className="text-xs font-normal">Recent</Badge>
+            <Button variant="ghost" size="sm" className="text-xs" onClick={() => navigate("/admin/orders")}>
+              View All <ArrowUpRight className="h-3 w-3 ml-1" />
+            </Button>
           </CardHeader>
           <CardContent>
             {!recentOrders?.length ? (
@@ -376,14 +381,17 @@ const Dashboard = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-lg">Categories</CardTitle>
-            <LayoutGrid className="h-4 w-4 text-muted-foreground" />
+            <Button variant="ghost" size="sm" className="text-xs" onClick={() => navigate("/admin/categories")}>
+              View All <ArrowUpRight className="h-3 w-3 ml-1" />
+            </Button>
           </CardHeader>
           <CardContent>
             <div className="flex gap-3 overflow-x-auto pb-2">
               {stats?.categories?.map((cat) => (
                 <div
                   key={cat.id}
-                  className="flex-shrink-0 flex flex-col items-center justify-center w-28 h-24 rounded-xl border border-border bg-muted/40 hover:bg-muted transition-colors cursor-pointer"
+                  onClick={() => navigate("/admin/categories")}
+                  className="flex-shrink-0 flex flex-col items-center justify-center w-28 h-24 rounded-xl border border-border bg-muted/40 hover:bg-primary/10 hover:border-primary/30 transition-colors cursor-pointer"
                 >
                   <LayoutGrid className="h-6 w-6 text-primary mb-2" />
                   <span className="text-xs font-medium text-foreground">{cat.name}</span>
@@ -399,12 +407,14 @@ const Dashboard = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-lg">Latest Products</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
+            <Button variant="ghost" size="sm" className="text-xs" onClick={() => navigate("/admin/products")}>
+              View All <ArrowUpRight className="h-3 w-3 ml-1" />
+            </Button>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {topProducts?.map((product) => (
-                <div key={product.id} className="rounded-xl border border-border overflow-hidden hover:shadow-md transition-shadow">
+                <Link to={`/admin/products/${product.id}`} key={product.id} className="rounded-xl border border-border overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
                   <div className="h-32 bg-muted flex items-center justify-center">
                     {product.images?.[0]?.url ? (
                       <img src={product.images[0].url} alt={product.name} className="h-full w-full object-cover" />
@@ -418,7 +428,7 @@ const Dashboard = () => {
                       ${Number(product.base_price).toFixed(2)}
                     </p>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </CardContent>

@@ -1,10 +1,37 @@
+import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Shirt, Shield } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Shirt, Shield, Key } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Settings = () => {
   const { user, isAdmin } = useAuth();
+  const { toast } = useToast();
+  const [currentPw, setCurrentPw] = useState("");
+  const [newPw, setNewPw] = useState("");
+  const [changingPw, setChangingPw] = useState(false);
+
+  const handleChangePassword = async () => {
+    if (!newPw || newPw.length < 6) {
+      toast({ title: "Password must be at least 6 characters", variant: "destructive" });
+      return;
+    }
+    setChangingPw(true);
+    const { error } = await supabase.auth.updateUser({ password: newPw });
+    setChangingPw(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Password updated successfully" });
+      setCurrentPw("");
+      setNewPw("");
+    }
+  };
 
   return (
     <div className="p-6 lg:p-8 space-y-6 max-w-2xl">
@@ -16,8 +43,7 @@ const Settings = () => {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            Account Info
+            <Shield className="h-5 w-5" /> Account Info
           </CardTitle>
           <CardDescription>Your admin account details</CardDescription>
         </CardHeader>
@@ -46,8 +72,24 @@ const Settings = () => {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <Shirt className="h-5 w-5" />
-            Store Info
+            <Key className="h-5 w-5" /> Change Password
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>New Password</Label>
+            <Input type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)} placeholder="At least 6 characters" />
+          </div>
+          <Button onClick={handleChangePassword} disabled={changingPw || !newPw}>
+            {changingPw ? "Updating..." : "Update Password"}
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Shirt className="h-5 w-5" /> Store Info
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
