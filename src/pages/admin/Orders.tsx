@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ShoppingCart, Eye, X, MoreHorizontal } from "lucide-react";
+import { ShoppingCart, Eye, MoreHorizontal, FileDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useCurrency } from "@/hooks/useCurrency";
+import { generateInvoice } from "@/lib/generateInvoice";
 
 const ALL_STATUSES = ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled", "refunded"] as const;
 
@@ -24,6 +25,7 @@ const statusColors: Record<string, string> = {
 const Orders = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { format, symbol } = useCurrency();
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
@@ -32,7 +34,7 @@ const Orders = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("orders")
-        .select("*, customers(first_name, last_name, email, phone, city, state), order_items(id, product_name, quantity, unit_price, total_price, variant_label)")
+        .select("*, customers(first_name, last_name, email, phone, city, state, address_line1, address_line2, zip, country), order_items(id, product_name, quantity, unit_price, total_price, variant_label)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -61,6 +63,11 @@ const Orders = () => {
   const filteredOrders = orders?.filter(
     (o) => filterStatus === "all" || o.status === filterStatus
   );
+
+  const handleDownloadInvoice = (order: any) => {
+    generateInvoice(order, symbol);
+    toast({ title: "Invoice downloaded" });
+  };
 
   return (
     <div className="p-6 lg:p-8 space-y-6">
@@ -115,7 +122,7 @@ const Orders = () => {
                       : "Guest"}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{order.order_items?.length ?? 0}</td>
-                  <td className="px-4 py-3 font-medium">${Number(order.total).toFixed(2)}</td>
+                  <td className="px-4 py-3 font-medium">{format(Number(order.total))}</td>
                   <td className="px-4 py-3">
                     <Select
                       value={order.status}
@@ -147,6 +154,9 @@ const Orders = () => {
                         <DropdownMenuItem onClick={() => setSelectedOrder(order)}>
                           <Eye className="h-4 w-4 mr-2" /> View Details
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDownloadInvoice(order)}>
+                          <FileDown className="h-4 w-4 mr-2" /> Download Invoice
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </td>
@@ -161,7 +171,12 @@ const Orders = () => {
       <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Order {selectedOrder?.order_number}</DialogTitle>
+            <DialogTitle className="flex items-center justify-between">
+              <span>Order {selectedOrder?.order_number}</span>
+              <Button size="sm" variant="outline" className="gap-1" onClick={() => selectedOrder && handleDownloadInvoice(selectedOrder)}>
+                <FileDown className="h-4 w-4" /> Invoice
+              </Button>
+            </DialogTitle>
           </DialogHeader>
           {selectedOrder && (
             <div className="space-y-4">
@@ -219,7 +234,7 @@ const Orders = () => {
                         )}
                         <span className="text-muted-foreground"> × {item.quantity}</span>
                       </div>
-                      <span className="font-medium">${Number(item.total_price).toFixed(2)}</span>
+                      <span className="font-medium">{format(Number(item.total_price))}</span>
                     </div>
                   ))}
                 </div>
@@ -228,19 +243,19 @@ const Orders = () => {
               <div className="border-t border-border pt-3 space-y-1 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span>${Number(selectedOrder.subtotal).toFixed(2)}</span>
+                  <span>{format(Number(selectedOrder.subtotal))}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Tax</span>
-                  <span>${Number(selectedOrder.tax).toFixed(2)}</span>
+                  <span>{format(Number(selectedOrder.tax))}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Shipping</span>
-                  <span>${Number(selectedOrder.shipping_cost).toFixed(2)}</span>
+                  <span>{format(Number(selectedOrder.shipping_cost))}</span>
                 </div>
                 <div className="flex justify-between font-bold text-base pt-1 border-t border-border">
                   <span>Total</span>
-                  <span>${Number(selectedOrder.total).toFixed(2)}</span>
+                  <span>{format(Number(selectedOrder.total))}</span>
                 </div>
               </div>
 
