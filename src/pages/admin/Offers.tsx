@@ -74,7 +74,7 @@ const Offers = () => {
   const { data: offers = [], isLoading } = useQuery({
     queryKey: ["offers"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("offers")
         .select("*")
         .order("priority", { ascending: false });
