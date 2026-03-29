@@ -62,6 +62,21 @@ const ProductForm = () => {
     setVariants(updated);
   };
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    setImageFiles((prev) => [...prev, ...files]);
+    files.forEach((f) => {
+      const reader = new FileReader();
+      reader.onload = (ev) => setImagePreviews((prev) => [...prev, ev.target?.result as string]);
+      reader.readAsDataURL(f);
+    });
+  };
+
+  const removeImage = (index: number) => {
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const createMutation = useMutation({
     mutationFn: async () => {
       const { data: product, error: pErr } = await supabase
@@ -90,6 +105,29 @@ const ProductForm = () => {
 
         const { error: vErr } = await supabase.from("variants").insert(variantRows);
         if (vErr) throw vErr;
+      }
+
+      // Upload images
+      for (let i = 0; i < imageFiles.length; i++) {
+        const file = imageFiles[i];
+        const ext = file.name.split(".").pop();
+        const path = `${product.id}/${Date.now()}-${i}.${ext}`;
+
+        const { error: upErr } = await supabase.storage
+          .from("product-images")
+          .upload(path, file);
+        if (upErr) throw upErr;
+
+        const { data: urlData } = supabase.storage
+          .from("product-images")
+          .getPublicUrl(path);
+
+        await supabase.from("images").insert({
+          product_id: product.id,
+          url: urlData.publicUrl,
+          alt_text: name,
+          position: i,
+        });
       }
 
       return product;
