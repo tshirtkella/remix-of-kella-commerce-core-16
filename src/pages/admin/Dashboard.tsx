@@ -7,6 +7,7 @@ import {
   TrendingDown, ArrowUpRight, CheckCircle2, XCircle, Clock,
   LayoutGrid,
 } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell,
