@@ -65,7 +65,7 @@ const Settings = () => {
 
   const currencyMutation = useMutation({
     mutationFn: async (code: string) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("store_settings")
         .update({ value: code, updated_at: new Date().toISOString() })
         .eq("key", "currency");
