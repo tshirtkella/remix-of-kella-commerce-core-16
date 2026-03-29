@@ -378,14 +378,17 @@ const Dashboard = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-lg">Categories</CardTitle>
-            <LayoutGrid className="h-4 w-4 text-muted-foreground" />
+            <Button variant="ghost" size="sm" className="text-xs" onClick={() => navigate("/admin/categories")}>
+              View All <ArrowUpRight className="h-3 w-3 ml-1" />
+            </Button>
           </CardHeader>
           <CardContent>
             <div className="flex gap-3 overflow-x-auto pb-2">
               {stats?.categories?.map((cat) => (
                 <div
                   key={cat.id}
-                  className="flex-shrink-0 flex flex-col items-center justify-center w-28 h-24 rounded-xl border border-border bg-muted/40 hover:bg-muted transition-colors cursor-pointer"
+                  onClick={() => navigate("/admin/categories")}
+                  className="flex-shrink-0 flex flex-col items-center justify-center w-28 h-24 rounded-xl border border-border bg-muted/40 hover:bg-primary/10 hover:border-primary/30 transition-colors cursor-pointer"
                 >
                   <LayoutGrid className="h-6 w-6 text-primary mb-2" />
                   <span className="text-xs font-medium text-foreground">{cat.name}</span>
