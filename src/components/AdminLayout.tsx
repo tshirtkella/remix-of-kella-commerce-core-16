@@ -1,6 +1,6 @@
 import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { Package, LayoutGrid, LogOut, Shirt, ShoppingCart, Users, Settings, BarChart3 } from "lucide-react";
+import { Package, LayoutGrid, LogOut, Shirt, ShoppingCart, Users, Settings, BarChart3, Megaphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
@@ -9,6 +9,7 @@ const navItems = [
   { to: "/admin/categories", icon: LayoutGrid, label: "Categories" },
   { to: "/admin/orders", icon: ShoppingCart, label: "Orders" },
   { to: "/admin/customers", icon: Users, label: "Customers" },
+  { to: "/admin/offers", icon: Megaphone, label: "Offers" },
   { to: "/admin/settings", icon: Settings, label: "Settings" },
 ];
 
