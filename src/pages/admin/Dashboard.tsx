@@ -428,8 +428,7 @@ const Dashboard = () => {
                       ${Number(product.base_price).toFixed(2)}
                     </p>
                   </div>
-                </div>
-              ))}
+                </Link>
             </div>
           </CardContent>
         </Card>
