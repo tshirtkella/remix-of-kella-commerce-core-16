@@ -91,6 +91,7 @@ const Checkout = () => {
   };
 
   const handlePlaceOrder = async () => {
+    setAttempted(true);
     if (!form.email || !form.firstName || !form.phone || !form.address || !form.city) {
       toast({ title: "Please fill in all required fields", variant: "destructive" });
       return;
