@@ -240,7 +240,7 @@ const Profile = () => {
               <button
                 key={s.label}
                 className="flex flex-col items-center gap-1.5 p-2 rounded-xl hover:bg-muted/50 transition-colors"
-                onClick={() => navigate("/admin/orders")}
+                onClick={() => navigate("/my-orders")}
               >
                 <div className={`h-10 w-10 rounded-full ${s.bg} flex items-center justify-center`}>
                   <s.icon className={`h-5 w-5 ${s.color}`} />
