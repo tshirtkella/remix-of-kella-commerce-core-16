@@ -3,11 +3,13 @@ import { Shirt, ShoppingBag, User, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
+import { useBranding } from "@/hooks/useBranding";
 import ProductSearch from "./ProductSearch";
 
 const StoreHeader = () => {
   const { user, isStaff, signOut } = useAuth();
   const { totalItems, setIsCartOpen } = useCart();
+  const branding = useBranding();
 
   return (
     <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-lg border-b border-border">
@@ -15,10 +17,14 @@ const StoreHeader = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground group-hover:scale-105 transition-transform">
-              <Shirt className="h-5 w-5" />
-            </div>
-            <span className="font-heading font-bold text-lg text-foreground">T-Shirt Kella</span>
+            {branding.logo_url ? (
+              <img src={branding.logo_url} alt={branding.store_name} className="h-9 w-9 rounded-xl object-contain group-hover:scale-105 transition-transform" />
+            ) : (
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground group-hover:scale-105 transition-transform">
+                <Shirt className="h-5 w-5" />
+              </div>
+            )}
+            <span className="font-heading font-bold text-lg text-foreground">{branding.store_name}</span>
           </Link>
 
           {/* Nav */}

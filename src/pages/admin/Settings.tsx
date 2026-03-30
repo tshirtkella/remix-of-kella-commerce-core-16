@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
-import { Shirt, Shield, Key, Users, DollarSign, Trash2, UserPlus, CreditCard } from "lucide-react";
+import { Shirt, Shield, Key, Users, DollarSign, Trash2, UserPlus, CreditCard, Image, Globe } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -52,6 +52,13 @@ const Settings = () => {
   const [inviteRole, setInviteRole] = useState<AppRole>("user");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [savingPayment, setSavingPayment] = useState(false);
+  const [savingBranding, setSavingBranding] = useState(false);
+
+  const [brandingForm, setBrandingForm] = useState({
+    store_name: "T-Shirt Kella",
+    logo_url: "",
+    favicon_url: "",
+  });
 
   interface PaymentConfig {
     sslcommerz_enabled: boolean;
@@ -105,6 +112,55 @@ const Settings = () => {
       });
     }
   }, [paymentSettings]);
+
+  // Branding settings query
+  const { data: brandingSettings } = useQuery({
+    queryKey: ["store-branding-admin"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("store_settings")
+        .select("key, value")
+        .in("key", ["store_name", "logo_url", "favicon_url"]);
+      const map: Record<string, string> = {};
+      (data ?? []).forEach((r: any) => { map[r.key] = r.value; });
+      return map;
+    },
+  });
+
+  useEffect(() => {
+    if (brandingSettings) {
+      setBrandingForm({
+        store_name: brandingSettings.store_name || "T-Shirt Kella",
+        logo_url: brandingSettings.logo_url || "",
+        favicon_url: brandingSettings.favicon_url || "",
+      });
+    }
+  }, [brandingSettings]);
+
+  const handleSaveBranding = async () => {
+    setSavingBranding(true);
+    try {
+      const now = new Date().toISOString();
+      const entries = [
+        { key: "store_name", value: brandingForm.store_name },
+        { key: "logo_url", value: brandingForm.logo_url },
+        { key: "favicon_url", value: brandingForm.favicon_url },
+      ];
+      for (const entry of entries) {
+        const { error } = await supabase
+          .from("store_settings")
+          .upsert({ key: entry.key, value: entry.value, updated_at: now }, { onConflict: "key" });
+        if (error) throw error;
+      }
+      queryClient.invalidateQueries({ queryKey: ["store-branding"] });
+      queryClient.invalidateQueries({ queryKey: ["store-branding-admin"] });
+      toast({ title: "Branding settings saved" });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setSavingBranding(false);
+    }
+  };
 
   const handleSavePayment = async () => {
     setSavingPayment(true);
@@ -520,17 +576,69 @@ const Settings = () => {
         </CardContent>
       </Card>
 
+      {/* Branding */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Image className="h-5 w-5" /> Branding
+          </CardTitle>
+          <CardDescription>Customize your store name, logo and favicon</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Store Name</Label>
+            <Input
+              value={brandingForm.store_name}
+              onChange={(e) => setBrandingForm(prev => ({ ...prev, store_name: e.target.value }))}
+              placeholder="Your Store Name"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Logo URL</Label>
+            <Input
+              value={brandingForm.logo_url}
+              onChange={(e) => setBrandingForm(prev => ({ ...prev, logo_url: e.target.value }))}
+              placeholder="https://example.com/logo.png"
+            />
+            {brandingForm.logo_url && (
+              <div className="mt-2 p-3 border border-border rounded-lg bg-muted/30 flex items-center gap-3">
+                <img src={brandingForm.logo_url} alt="Logo preview" className="h-10 w-10 object-contain rounded" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                <span className="text-xs text-muted-foreground">Logo preview</span>
+              </div>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label>Favicon URL</Label>
+            <Input
+              value={brandingForm.favicon_url}
+              onChange={(e) => setBrandingForm(prev => ({ ...prev, favicon_url: e.target.value }))}
+              placeholder="https://example.com/favicon.png"
+            />
+            {brandingForm.favicon_url && (
+              <div className="mt-2 p-3 border border-border rounded-lg bg-muted/30 flex items-center gap-3">
+                <img src={brandingForm.favicon_url} alt="Favicon preview" className="h-6 w-6 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                <span className="text-xs text-muted-foreground">Favicon preview</span>
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground">Recommended: 32x32 or 64x64 PNG image</p>
+          </div>
+          <Button onClick={handleSaveBranding} disabled={savingBranding} className="w-full">
+            {savingBranding ? "Saving..." : "Save Branding"}
+          </Button>
+        </CardContent>
+      </Card>
+
       {/* Store Info */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <Shirt className="h-5 w-5" /> Store Info
+            <Globe className="h-5 w-5" /> Store Info
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex justify-between items-center py-2 border-b border-border">
             <span className="text-sm text-muted-foreground">Store Name</span>
-            <span className="text-sm font-medium">T-Shirt Kella</span>
+            <span className="text-sm font-medium">{brandingForm.store_name}</span>
           </div>
           <div className="flex justify-between items-center py-2">
             <span className="text-sm text-muted-foreground">Platform</span>
