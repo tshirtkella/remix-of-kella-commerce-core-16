@@ -109,13 +109,20 @@ const Checkout = () => {
   const grandTotal = totalPrice + shippingCost + tax;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+    // Clear specific field error on change
+    if (attempted && fieldErrors[name]) {
+      setFieldErrors((prev) => { const next = { ...prev }; delete next[name]; return next; });
+    }
   };
 
   const handlePlaceOrder = async () => {
     setAttempted(true);
-    if (!form.email || !form.firstName || !form.phone || !form.address || !form.city) {
-      toast({ title: "Please fill in all required fields", variant: "destructive" });
+    const errors = validateForm();
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      toast({ title: "Please fix the errors below", variant: "destructive" });
       return;
     }
     if (items.length === 0) {
