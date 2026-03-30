@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -9,9 +9,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, Megaphone, Eye, GripVertical } from "lucide-react";
+import { Plus, Pencil, Trash2, Megaphone, Eye, Upload, X, Image as ImageIcon } from "lucide-react";
 
 const PLACEMENTS = [
   { value: "hero", label: "Hero Banner", desc: "Large banner at top of homepage" },
@@ -39,6 +39,7 @@ interface Offer {
   placement: string;
   cta_text: string | null;
   cta_link: string | null;
+  banner_image: string | null;
   is_active: boolean;
   priority: number;
   starts_at: string | null;
@@ -57,6 +58,7 @@ const emptyForm = {
   placement: "hero",
   cta_text: "Shop Now",
   cta_link: "/products",
+  banner_image: "",
   is_active: true,
   priority: 0,
   starts_at: "",
@@ -70,6 +72,8 @@ const Offers = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [previewOffer, setPreviewOffer] = useState<Offer | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: offers = [], isLoading } = useQuery({
     queryKey: ["offers"],
@@ -82,6 +86,39 @@ const Offers = () => {
       return data as Offer[];
     },
   });
+
+  const handleImageUpload = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Please upload an image file", variant: "destructive" });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "Image must be under 5MB", variant: "destructive" });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const fileName = `offer-banner-${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("product-images")
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from("product-images")
+        .getPublicUrl(fileName);
+
+      setForm({ ...form, banner_image: urlData.publicUrl });
+      toast({ title: "Image uploaded successfully" });
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const saveMutation = useMutation({
     mutationFn: async (payload: typeof form & { id?: string }) => {
@@ -96,6 +133,7 @@ const Offers = () => {
         placement: payload.placement,
         cta_text: payload.cta_text || "Shop Now",
         cta_link: payload.cta_link || "/products",
+        banner_image: payload.banner_image || null,
         is_active: payload.is_active,
         priority: payload.priority,
         starts_at: payload.starts_at || null,
@@ -156,6 +194,7 @@ const Offers = () => {
       placement: offer.placement,
       cta_text: offer.cta_text || "Shop Now",
       cta_link: offer.cta_link || "/products",
+      banner_image: offer.banner_image || "",
       is_active: offer.is_active,
       priority: offer.priority,
       starts_at: offer.starts_at ? offer.starts_at.slice(0, 16) : "",
@@ -208,16 +247,21 @@ const Offers = () => {
                   
                   {/* Live mini-preview */}
                   <div
-                    className="w-48 shrink-0 flex flex-col items-center justify-center p-4 text-center"
+                    className="w-48 shrink-0 flex flex-col items-center justify-center p-4 text-center relative overflow-hidden"
                     style={{ backgroundColor: offer.bg_color || "#3B82F6", color: offer.text_color || "#FFF" }}
                   >
-                    {offer.badge_label && (
-                      <span className="text-[10px] font-bold tracking-wider uppercase bg-white/20 rounded px-1.5 py-0.5 mb-1">
-                        {offer.badge_label}
-                      </span>
+                    {offer.banner_image && (
+                      <img src={offer.banner_image} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40" />
                     )}
-                    <span className="font-bold text-sm leading-tight">{offer.discount_text}</span>
-                    <span className="text-[10px] mt-0.5 opacity-80">{offer.title}</span>
+                    <div className="relative z-10">
+                      {offer.badge_label && (
+                        <span className="text-[10px] font-bold tracking-wider uppercase bg-white/20 rounded px-1.5 py-0.5 mb-1 inline-block">
+                          {offer.badge_label}
+                        </span>
+                      )}
+                      <span className="font-bold text-sm leading-tight block">{offer.discount_text}</span>
+                      <span className="text-[10px] mt-0.5 opacity-80 block">{offer.title}</span>
+                    </div>
                   </div>
 
                   {/* Details */}
@@ -226,11 +270,13 @@ const Offers = () => {
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="font-semibold text-sm truncate">{offer.title}</h3>
                         <Badge variant="outline" className="text-[10px] shrink-0">{placementLabel(offer.placement)}</Badge>
+                        {offer.banner_image && <Badge variant="secondary" className="text-[10px]">Has Image</Badge>}
                         {!offer.is_active && <Badge variant="secondary" className="text-[10px]">Inactive</Badge>}
                       </div>
                       {offer.subtitle && <p className="text-xs text-muted-foreground truncate">{offer.subtitle}</p>}
                       <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
                         <span>Priority: {offer.priority}</span>
+                        {offer.cta_text && <span>CTA: {offer.cta_text}</span>}
                         {offer.ends_at && (
                           <span>Ends: {new Date(offer.ends_at).toLocaleDateString()}</span>
                         )}
@@ -268,22 +314,82 @@ const Offers = () => {
           <div className="space-y-4">
             {/* Live preview */}
             <div
-              className="rounded-lg p-6 text-center"
+              className="rounded-lg p-6 text-center relative overflow-hidden"
               style={{ backgroundColor: form.bg_color, color: form.text_color }}
             >
-              {form.badge_label && (
-                <span className="text-xs font-bold tracking-widest uppercase bg-white/20 rounded-full px-3 py-1">
-                  {form.badge_label}
-                </span>
+              {form.banner_image && (
+                <img src={form.banner_image} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40" />
               )}
-              <p className="text-2xl font-bold mt-2">{form.discount_text || "DISCOUNT TEXT"}</p>
-              <p className="text-lg font-medium mt-1">{form.title || "Offer Title"}</p>
-              {form.subtitle && <p className="text-sm opacity-80 mt-1">{form.subtitle}</p>}
-              {form.cta_text && (
-                <button className="mt-3 px-4 py-1.5 rounded-full bg-white/20 text-sm font-medium hover:bg-white/30 transition">
-                  {form.cta_text}
-                </button>
+              <div className="relative z-10">
+                {form.badge_label && (
+                  <span className="text-xs font-bold tracking-widest uppercase bg-white/20 rounded-full px-3 py-1">
+                    {form.badge_label}
+                  </span>
+                )}
+                <p className="text-2xl font-bold mt-2">{form.discount_text || "DISCOUNT TEXT"}</p>
+                <p className="text-lg font-medium mt-1">{form.title || "Offer Title"}</p>
+                {form.subtitle && <p className="text-sm opacity-80 mt-1">{form.subtitle}</p>}
+                {form.cta_text && (
+                  <button className="mt-3 px-5 py-2 rounded-full bg-white/20 text-sm font-semibold hover:bg-white/30 transition border border-white/30">
+                    {form.cta_text} →
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Hero Banner Image Upload */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <ImageIcon className="h-4 w-4" />
+                Hero Banner Image
+              </Label>
+              {form.banner_image ? (
+                <div className="relative rounded-lg overflow-hidden border border-border">
+                  <img
+                    src={form.banner_image}
+                    alt="Banner preview"
+                    className="w-full h-32 object-cover"
+                  />
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2 h-7 w-7"
+                    onClick={() => setForm({ ...form, banner_image: "" })}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              ) : (
+                <div
+                  className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-colors"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground">
+                    {uploading ? "Uploading..." : "Click to upload banner image"}
+                  </p>
+                  <p className="text-xs text-muted-foreground/60 mt-1">JPG, PNG or WebP. Max 5MB</p>
+                </div>
               )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleImageUpload(file);
+                  e.target.value = "";
+                }}
+              />
+              <div className="flex items-center gap-2">
+                <Input
+                  placeholder="Or paste image URL..."
+                  value={form.banner_image}
+                  onChange={(e) => setForm({ ...form, banner_image: e.target.value })}
+                  className="text-xs"
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -333,15 +439,20 @@ const Offers = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>CTA Button Text</Label>
-                <Input value={form.cta_text} onChange={(e) => setForm({ ...form, cta_text: e.target.value })} />
+            {/* CTA Button Section */}
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">CTA Button</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Button Text</Label>
+                  <Input value={form.cta_text} onChange={(e) => setForm({ ...form, cta_text: e.target.value })} placeholder="Shop Now" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Button Link</Label>
+                  <Input value={form.cta_link} onChange={(e) => setForm({ ...form, cta_link: e.target.value })} placeholder="/products" />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label>CTA Link</Label>
-                <Input value={form.cta_link} onChange={(e) => setForm({ ...form, cta_link: e.target.value })} />
-              </div>
+              <p className="text-xs text-muted-foreground">Leave empty to hide the CTA button on the banner.</p>
             </div>
 
             {/* Colors */}
@@ -430,6 +541,9 @@ const Offers = () => {
                   className="rounded-xl p-8 text-center relative overflow-hidden"
                   style={{ backgroundColor: previewOffer.bg_color || "#3B82F6", color: previewOffer.text_color || "#FFF" }}
                 >
+                  {previewOffer.banner_image && (
+                    <img src={previewOffer.banner_image} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40" />
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-transparent" />
                   <div className="relative z-10">
                     {previewOffer.badge_label && (
@@ -441,8 +555,8 @@ const Offers = () => {
                     <p className="text-xl font-medium mt-1">{previewOffer.title}</p>
                     {previewOffer.subtitle && <p className="text-sm opacity-80 mt-1">{previewOffer.subtitle}</p>}
                     {previewOffer.cta_text && (
-                      <button className="mt-4 px-6 py-2 rounded-full bg-white/20 font-medium hover:bg-white/30 transition">
-                        {previewOffer.cta_text}
+                      <button className="mt-4 px-6 py-2 rounded-full bg-white/20 font-semibold hover:bg-white/30 transition border border-white/30">
+                        {previewOffer.cta_text} →
                       </button>
                     )}
                   </div>
@@ -470,20 +584,25 @@ const Offers = () => {
               <div>
                 <p className="text-xs text-muted-foreground mb-2 font-medium">Sidebar Card</p>
                 <div
-                  className="rounded-xl p-5 w-64"
+                  className="rounded-xl p-5 w-64 relative overflow-hidden"
                   style={{ backgroundColor: previewOffer.bg_color || "#3B82F6", color: previewOffer.text_color || "#FFF" }}
                 >
-                  {previewOffer.badge_label && (
-                    <span className="text-[10px] font-bold tracking-wider uppercase bg-white/20 rounded px-2 py-0.5">
-                      {previewOffer.badge_label}
-                    </span>
+                  {previewOffer.banner_image && (
+                    <img src={previewOffer.banner_image} alt="" className="absolute inset-0 w-full h-full object-cover opacity-30" />
                   )}
-                  <p className="text-xl font-bold mt-2">{previewOffer.discount_text}</p>
-                  <p className="text-sm font-medium mt-1">{previewOffer.title}</p>
-                  {previewOffer.subtitle && <p className="text-xs opacity-80 mt-1">{previewOffer.subtitle}</p>}
-                  {previewOffer.cta_text && (
-                    <button className="mt-3 text-xs font-medium underline">{previewOffer.cta_text} →</button>
-                  )}
+                  <div className="relative z-10">
+                    {previewOffer.badge_label && (
+                      <span className="text-[10px] font-bold tracking-wider uppercase bg-white/20 rounded px-2 py-0.5">
+                        {previewOffer.badge_label}
+                      </span>
+                    )}
+                    <p className="text-xl font-bold mt-2">{previewOffer.discount_text}</p>
+                    <p className="text-sm font-medium mt-1">{previewOffer.title}</p>
+                    {previewOffer.subtitle && <p className="text-xs opacity-80 mt-1">{previewOffer.subtitle}</p>}
+                    {previewOffer.cta_text && (
+                      <button className="mt-3 text-xs font-medium underline">{previewOffer.cta_text} →</button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
