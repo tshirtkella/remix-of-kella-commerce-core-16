@@ -43,9 +43,31 @@ const Checkout = () => {
   const [saveInfo, setSaveInfo] = useState(false);
   const [textOffers, setTextOffers] = useState(false);
   const [attempted, setAttempted] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  const requiredFields = ["email", "firstName", "phone", "address", "city"] as const;
-  const isFieldInvalid = (field: string) => attempted && !form[field as keyof typeof form]?.trim();
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const phoneRegex = /^[\d+\-() ]{7,15}$/;
+
+  const validateForm = (): Record<string, string> => {
+    const errors: Record<string, string> = {};
+    if (!form.email.trim()) errors.email = "Email is required";
+    else if (!emailRegex.test(form.email.trim())) errors.email = "Enter a valid email address";
+
+    if (!form.firstName.trim()) errors.firstName = "First name is required";
+    else if (form.firstName.trim().length < 2) errors.firstName = "First name must be at least 2 characters";
+
+    if (!form.phone.trim()) errors.phone = "Phone is required";
+    else if (!phoneRegex.test(form.phone.trim())) errors.phone = "Enter a valid phone number";
+
+    if (!form.address.trim()) errors.address = "Address is required";
+    else if (form.address.trim().length < 5) errors.address = "Enter a complete address";
+
+    if (!form.city.trim()) errors.city = "City is required";
+
+    return errors;
+  };
+
+  const getFieldError = (field: string) => attempted ? fieldErrors[field] : undefined;
 
   // Fetch enabled payment methods from admin settings
   const { data: paymentSettings } = useQuery({
@@ -87,13 +109,20 @@ const Checkout = () => {
   const grandTotal = totalPrice + shippingCost + tax;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+    // Clear specific field error on change
+    if (attempted && fieldErrors[name]) {
+      setFieldErrors((prev) => { const next = { ...prev }; delete next[name]; return next; });
+    }
   };
 
   const handlePlaceOrder = async () => {
     setAttempted(true);
-    if (!form.email || !form.firstName || !form.phone || !form.address || !form.city) {
-      toast({ title: "Please fill in all required fields", variant: "destructive" });
+    const errors = validateForm();
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      toast({ title: "Please fix the errors below", variant: "destructive" });
       return;
     }
     if (items.length === 0) {
@@ -213,9 +242,9 @@ const Checkout = () => {
                 value={form.email}
                 onChange={handleChange}
                 placeholder="Email or mobile phone number *"
-                className={isFieldInvalid("email") ? "border-destructive ring-1 ring-destructive" : ""}
+                className={getFieldError("email") ? "border-destructive ring-1 ring-destructive" : ""}
               />
-              {isFieldInvalid("email") && <p className="text-xs text-destructive">Email is required</p>}
+              {getFieldError("email") && <p className="text-xs text-destructive">{getFieldError("email")}</p>}
               <div className="flex items-center gap-2">
                 <Checkbox id="emailOffers" checked={emailOffers} onCheckedChange={(v) => setEmailOffers(!!v)} />
                 <Label htmlFor="emailOffers" className="text-sm cursor-pointer">Email me with news and offers</Label>
@@ -235,27 +264,29 @@ const Checkout = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Input name="firstName" value={form.firstName} onChange={handleChange} placeholder="First name *" className={isFieldInvalid("firstName") ? "border-destructive ring-1 ring-destructive" : ""} />
-                  {isFieldInvalid("firstName") && <p className="text-xs text-destructive mt-1">First name is required</p>}
+                  <Input name="firstName" value={form.firstName} onChange={handleChange} placeholder="First name *" className={getFieldError("firstName") ? "border-destructive ring-1 ring-destructive" : ""} />
+                  {getFieldError("firstName") && <p className="text-xs text-destructive mt-1">{getFieldError("firstName")}</p>}
                 </div>
                 <div>
                   <Input name="lastName" value={form.lastName} onChange={handleChange} placeholder="Last name" />
                 </div>
               </div>
 
-              <Input name="address" value={form.address} onChange={handleChange} placeholder="Address *" className={isFieldInvalid("address") ? "border-destructive ring-1 ring-destructive" : ""} />
-              {isFieldInvalid("address") && <p className="text-xs text-destructive mt-1">Address is required</p>}
+              <div>
+                <Input name="address" value={form.address} onChange={handleChange} placeholder="Address *" className={getFieldError("address") ? "border-destructive ring-1 ring-destructive" : ""} />
+                {getFieldError("address") && <p className="text-xs text-destructive mt-1">{getFieldError("address")}</p>}
+              </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Input name="city" value={form.city} onChange={handleChange} placeholder="City *" className={isFieldInvalid("city") ? "border-destructive ring-1 ring-destructive" : ""} />
-                  {isFieldInvalid("city") && <p className="text-xs text-destructive mt-1">City is required</p>}
+                  <Input name="city" value={form.city} onChange={handleChange} placeholder="City *" className={getFieldError("city") ? "border-destructive ring-1 ring-destructive" : ""} />
+                  {getFieldError("city") && <p className="text-xs text-destructive mt-1">{getFieldError("city")}</p>}
                 </div>
                 <Input name="zip" value={form.zip} onChange={handleChange} placeholder="Postal code (optional)" />
               </div>
 
               <div className="relative">
-                <Input name="phone" value={form.phone} onChange={handleChange} placeholder="Phone *" className={isFieldInvalid("phone") ? "border-destructive ring-1 ring-destructive" : ""} />
+                <Input name="phone" value={form.phone} onChange={handleChange} placeholder="Phone *" className={getFieldError("phone") ? "border-destructive ring-1 ring-destructive" : ""} />
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -266,7 +297,7 @@ const Checkout = () => {
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-                {isFieldInvalid("phone") && <p className="text-xs text-destructive mt-1">Phone is required</p>}
+                {getFieldError("phone") && <p className="text-xs text-destructive mt-1">{getFieldError("phone")}</p>}
               </div>
 
               <div className="flex items-center gap-2">
