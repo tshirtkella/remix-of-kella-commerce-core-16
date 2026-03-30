@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Shirt, Shield, Key, Users, DollarSign, Trash2, UserPlus } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Shirt, Shield, Key, Users, DollarSign, Trash2, UserPlus, CreditCard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -49,12 +50,15 @@ const Settings = () => {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<AppRole>("user");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [stripeKey, setStripeKey] = useState("");
+  const [stripeEnabled, setStripeEnabled] = useState(false);
+  const [savingStripe, setSavingStripe] = useState(false);
 
   // Currency
   const { data: currency, isLoading: currLoading } = useQuery({
     queryKey: ["store-currency"],
     queryFn: async () => {
-      const { data } = await (supabase as any)
+      const { data } = await supabase
         .from("store_settings")
         .select("value")
         .eq("key", "currency")
@@ -63,9 +67,56 @@ const Settings = () => {
     },
   });
 
+  // Stripe settings
+  const { data: stripeSettings } = useQuery({
+    queryKey: ["store-stripe-settings"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("store_settings")
+        .select("key, value")
+        .in("key", ["stripe_enabled", "stripe_secret_key"]);
+      const map: Record<string, string> = {};
+      (data ?? []).forEach((r: any) => { map[r.key] = r.value; });
+      return map;
+    },
+  });
+
+  useEffect(() => {
+    if (stripeSettings) {
+      setStripeEnabled(stripeSettings.stripe_enabled === "true");
+      setStripeKey(stripeSettings.stripe_secret_key ? "••••••••" : "");
+    }
+  }, [stripeSettings]);
+
+  const handleSaveStripe = async () => {
+    setSavingStripe(true);
+    try {
+      // Upsert stripe_enabled
+      const { error: e1 } = await supabase
+        .from("store_settings")
+        .upsert({ key: "stripe_enabled", value: String(stripeEnabled), updated_at: new Date().toISOString() }, { onConflict: "key" });
+      if (e1) throw e1;
+
+      // Upsert stripe key only if changed (not masked)
+      if (stripeKey && !stripeKey.startsWith("••")) {
+        const { error: e2 } = await supabase
+          .from("store_settings")
+          .upsert({ key: "stripe_secret_key", value: stripeKey, updated_at: new Date().toISOString() }, { onConflict: "key" });
+        if (e2) throw e2;
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["store-stripe-settings"] });
+      toast({ title: "Payment settings saved" });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setSavingStripe(false);
+    }
+  };
+
   const currencyMutation = useMutation({
     mutationFn: async (code: string) => {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("store_settings")
         .update({ value: code, updated_at: new Date().toISOString() })
         .eq("key", "currency");
@@ -334,7 +385,45 @@ const Settings = () => {
         </CardContent>
       </Card>
 
-      {/* Change Password */}
+      {/* Payment Gateway */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <CreditCard className="h-5 w-5" /> Payment Gateway
+          </CardTitle>
+          <CardDescription>Configure online payment for checkout</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">Enable Stripe Payments</p>
+              <p className="text-xs text-muted-foreground">Allow customers to pay online with card</p>
+            </div>
+            <Switch checked={stripeEnabled} onCheckedChange={setStripeEnabled} />
+          </div>
+          {stripeEnabled && (
+            <div className="space-y-2">
+              <Label>Stripe Secret Key</Label>
+              <Input
+                type="password"
+                value={stripeKey}
+                onChange={(e) => setStripeKey(e.target.value)}
+                placeholder="sk_live_... or sk_test_..."
+              />
+              <p className="text-xs text-muted-foreground">
+                Find your key at{" "}
+                <a href="https://dashboard.stripe.com/apikeys" target="_blank" rel="noopener noreferrer" className="underline text-primary">
+                  dashboard.stripe.com/apikeys
+                </a>
+              </p>
+            </div>
+          )}
+          <Button onClick={handleSaveStripe} disabled={savingStripe}>
+            {savingStripe ? "Saving..." : "Save Payment Settings"}
+          </Button>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
