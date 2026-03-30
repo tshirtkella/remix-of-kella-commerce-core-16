@@ -243,7 +243,8 @@ const Checkout = () => {
                 </div>
               </div>
 
-              <Input name="address" value={form.address} onChange={handleChange} placeholder="Address" />
+              <Input name="address" value={form.address} onChange={handleChange} placeholder="Address *" className={isFieldInvalid("address") ? "border-destructive ring-1 ring-destructive" : ""} />
+              {isFieldInvalid("address") && <p className="text-xs text-destructive mt-1">Address is required</p>}
 
               <div className="grid grid-cols-2 gap-3">
                 <Input name="city" value={form.city} onChange={handleChange} placeholder="City" />
