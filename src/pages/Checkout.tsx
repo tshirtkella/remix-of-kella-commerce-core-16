@@ -54,9 +54,10 @@ const Checkout = () => {
       const map: Record<string, string> = {};
       (data ?? []).forEach((r: any) => { map[r.key] = r.value; });
       return {
-        sslcommerz: map.payment_sslcommerz_enabled === "true",
-        cod: map.payment_cod_enabled !== "false", // default true
-        bkash: map.payment_bkash_enabled === "true",
+        const hasAnySettings = Object.keys(map).length > 0;
+        sslcommerz: hasAnySettings ? map.payment_sslcommerz_enabled === "true" : true,
+        cod: map.payment_cod_enabled !== "false",
+        bkash: hasAnySettings ? map.payment_bkash_enabled === "true" : true,
         bkash_number: map.payment_bkash_number || "",
         bkash_instructions: map.payment_bkash_instructions || "",
       };
@@ -64,7 +65,7 @@ const Checkout = () => {
     staleTime: 30_000,
   });
 
-  const enabledMethods = paymentSettings ?? { sslcommerz: false, cod: true, bkash: false, bkash_number: "", bkash_instructions: "" };
+  const enabledMethods = paymentSettings ?? { sslcommerz: true, cod: true, bkash: true, bkash_number: "", bkash_instructions: "" };
 
   const [form, setForm] = useState({
     email: "",
