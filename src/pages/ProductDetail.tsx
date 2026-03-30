@@ -12,6 +12,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import StoreHeader from "@/components/storefront/StoreHeader";
 import StoreFooter from "@/components/storefront/StoreFooter";
+import RelatedProducts from "@/components/storefront/RelatedProducts";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -351,6 +352,8 @@ const ProductDetail = () => {
           </div>
         </div>
       </main>
+
+      <RelatedProducts categoryId={product.category_id} currentProductId={product.id} />
 
       <StoreFooter />
     </div>
