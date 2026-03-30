@@ -167,11 +167,9 @@ const Profile = () => {
             <Link to="/" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">
               <ArrowLeft className="h-5 w-5" />
             </Link>
-            {isStaff && (
-              <Link to="/admin" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">
-                <Settings className="h-5 w-5" />
-              </Link>
-            )}
+            <Link to="/settings" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">
+              <Settings className="h-5 w-5" />
+            </Link>
           </div>
 
           {/* Avatar + Name */}

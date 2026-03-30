@@ -20,6 +20,7 @@ import MyOrders from "./pages/MyOrders";
 import ShippingAddress from "./pages/ShippingAddress";
 import Support from "./pages/Support";
 import AboutUs from "./pages/AboutUs";
+import UserSettings from "./pages/UserSettings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/shipping-address" element={<ShippingAddress />} />
             <Route path="/support" element={<Support />} />
             <Route path="/about-us" element={<AboutUs />} />
+            <Route path="/settings" element={<UserSettings />} />
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<Dashboard />} />
               <Route path="products" element={<Products />} />
