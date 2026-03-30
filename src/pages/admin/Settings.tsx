@@ -51,31 +51,40 @@ const Settings = () => {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<AppRole>("user");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [stripeKey, setStripeKey] = useState("");
-  const [stripeEnabled, setStripeEnabled] = useState(false);
-  const [savingStripe, setSavingStripe] = useState(false);
+  const [savingPayment, setSavingPayment] = useState(false);
 
-  // Currency
-  const { data: currency, isLoading: currLoading } = useQuery({
-    queryKey: ["store-currency"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("store_settings")
-        .select("value")
-        .eq("key", "currency")
-        .maybeSingle();
-      return data?.value || "USD";
-    },
-  });
+  interface PaymentConfig {
+    sslcommerz_enabled: boolean;
+    sslcommerz_store_id: string;
+    sslcommerz_store_password: string;
+    sslcommerz_sandbox: boolean;
+    cod_enabled: boolean;
+    bkash_enabled: boolean;
+    bkash_number: string;
+    bkash_instructions: string;
+  }
 
-  // Stripe settings
-  const { data: stripeSettings } = useQuery({
-    queryKey: ["store-stripe-settings"],
+  const defaultPaymentConfig: PaymentConfig = {
+    sslcommerz_enabled: false,
+    sslcommerz_store_id: "",
+    sslcommerz_store_password: "",
+    sslcommerz_sandbox: true,
+    cod_enabled: true,
+    bkash_enabled: false,
+    bkash_number: "",
+    bkash_instructions: "",
+  };
+
+  const [paymentConfig, setPaymentConfig] = useState<PaymentConfig>(defaultPaymentConfig);
+
+  // Payment settings query
+  const { data: paymentSettings } = useQuery({
+    queryKey: ["store-payment-settings"],
     queryFn: async () => {
       const { data } = await supabase
         .from("store_settings")
         .select("key, value")
-        .in("key", ["stripe_enabled", "stripe_secret_key"]);
+        .like("key", "payment_%");
       const map: Record<string, string> = {};
       (data ?? []).forEach((r: any) => { map[r.key] = r.value; });
       return map;
@@ -83,35 +92,54 @@ const Settings = () => {
   });
 
   useEffect(() => {
-    if (stripeSettings) {
-      setStripeEnabled(stripeSettings.stripe_enabled === "true");
-      setStripeKey(stripeSettings.stripe_secret_key ? "••••••••" : "");
+    if (paymentSettings) {
+      setPaymentConfig({
+        sslcommerz_enabled: paymentSettings.payment_sslcommerz_enabled === "true",
+        sslcommerz_store_id: paymentSettings.payment_sslcommerz_store_id || "",
+        sslcommerz_store_password: paymentSettings.payment_sslcommerz_store_password ? "••••••••" : "",
+        sslcommerz_sandbox: paymentSettings.payment_sslcommerz_sandbox !== "false",
+        cod_enabled: paymentSettings.payment_cod_enabled !== "false",
+        bkash_enabled: paymentSettings.payment_bkash_enabled === "true",
+        bkash_number: paymentSettings.payment_bkash_number || "",
+        bkash_instructions: paymentSettings.payment_bkash_instructions || "",
+      });
     }
-  }, [stripeSettings]);
+  }, [paymentSettings]);
 
-  const handleSaveStripe = async () => {
-    setSavingStripe(true);
+  const handleSavePayment = async () => {
+    setSavingPayment(true);
     try {
-      // Upsert stripe_enabled
-      const { error: e1 } = await supabase
-        .from("store_settings")
-        .upsert({ key: "stripe_enabled", value: String(stripeEnabled), updated_at: new Date().toISOString() }, { onConflict: "key" });
-      if (e1) throw e1;
+      const now = new Date().toISOString();
+      const entries: { key: string; value: string }[] = [
+        { key: "payment_sslcommerz_enabled", value: String(paymentConfig.sslcommerz_enabled) },
+        { key: "payment_sslcommerz_sandbox", value: String(paymentConfig.sslcommerz_sandbox) },
+        { key: "payment_cod_enabled", value: String(paymentConfig.cod_enabled) },
+        { key: "payment_bkash_enabled", value: String(paymentConfig.bkash_enabled) },
+        { key: "payment_bkash_number", value: paymentConfig.bkash_number },
+        { key: "payment_bkash_instructions", value: paymentConfig.bkash_instructions },
+      ];
 
-      // Upsert stripe key only if changed (not masked)
-      if (stripeKey && !stripeKey.startsWith("••")) {
-        const { error: e2 } = await supabase
-          .from("store_settings")
-          .upsert({ key: "stripe_secret_key", value: stripeKey, updated_at: new Date().toISOString() }, { onConflict: "key" });
-        if (e2) throw e2;
+      // Only save credentials if not masked
+      if (paymentConfig.sslcommerz_store_id && !paymentConfig.sslcommerz_store_id.startsWith("••")) {
+        entries.push({ key: "payment_sslcommerz_store_id", value: paymentConfig.sslcommerz_store_id });
+      }
+      if (paymentConfig.sslcommerz_store_password && !paymentConfig.sslcommerz_store_password.startsWith("••")) {
+        entries.push({ key: "payment_sslcommerz_store_password", value: paymentConfig.sslcommerz_store_password });
       }
 
-      queryClient.invalidateQueries({ queryKey: ["store-stripe-settings"] });
+      for (const entry of entries) {
+        const { error } = await supabase
+          .from("store_settings")
+          .upsert({ key: entry.key, value: entry.value, updated_at: now }, { onConflict: "key" });
+        if (error) throw error;
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["store-payment-settings"] });
       toast({ title: "Payment settings saved" });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
-      setSavingStripe(false);
+      setSavingPayment(false);
     }
   };
 
