@@ -19,74 +19,90 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [authReady, setAuthReady] = useState(false);
+  const [rolesLoading, setRolesLoading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isModerator, setIsModerator] = useState(false);
 
   const isStaff = isAdmin || isModerator;
-
-  const checkRoles = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId)
-        .in("role", ["admin", "moderator"]);
-
-      if (error) throw error;
-
-      const roles = (data ?? []).map((r) => r.role);
-      setIsAdmin(roles.includes("admin"));
-      setIsModerator(roles.includes("moderator"));
-    } catch {
-      setIsAdmin(false);
-      setIsModerator(false);
-    }
-  };
+  const loading = !authReady || rolesLoading;
 
   useEffect(() => {
     let isMounted = true;
 
-    const applySession = async (nextSession: Session | null) => {
+    const applySession = (nextSession: Session | null) => {
       if (!isMounted) return;
-
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
-
-      if (nextSession?.user) {
-        await checkRoles(nextSession.user.id);
-      } else {
-        setIsAdmin(false);
-        setIsModerator(false);
-      }
+      setAuthReady(true);
     };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, nextSession) => {
-        if (event === "INITIAL_SESSION") return;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      if (event === "INITIAL_SESSION") return;
+      applySession(nextSession);
+    });
 
-        try {
-          await applySession(nextSession);
-        } finally {
-          if (isMounted) setLoading(false);
-        }
-      }
-    );
-
-    (async () => {
-      try {
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
-        await applySession(initialSession);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    })();
+    supabase.auth.getSession()
+      .then(({ data: { session: initialSession } }) => {
+        applySession(initialSession);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setSession(null);
+        setUser(null);
+        setAuthReady(true);
+      });
 
     return () => {
       isMounted = false;
       subscription.unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadRoles = async () => {
+      if (!authReady) return;
+
+      if (!user) {
+        if (!isMounted) return;
+        setIsAdmin(false);
+        setIsModerator(false);
+        setRolesLoading(false);
+        return;
+      }
+
+      setRolesLoading(true);
+
+      try {
+        const { data, error } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .in("role", ["admin", "moderator"]);
+
+        if (error) throw error;
+        if (!isMounted) return;
+
+        const roles = (data ?? []).map((r) => r.role);
+        setIsAdmin(roles.includes("admin"));
+        setIsModerator(roles.includes("moderator"));
+      } catch {
+        if (!isMounted) return;
+        setIsAdmin(false);
+        setIsModerator(false);
+      } finally {
+        if (isMounted) setRolesLoading(false);
+      }
+    };
+
+    void loadRoles();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [authReady, user?.id]);
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
