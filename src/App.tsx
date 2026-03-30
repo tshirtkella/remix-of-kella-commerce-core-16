@@ -8,6 +8,7 @@ import Login from "./pages/Login";
 import Storefront from "./pages/Storefront";
 import CategoriesPage from "./pages/Categories";
 import Shop from "./pages/Shop";
+import ProductDetail from "./pages/ProductDetail";
 import AdminLayout from "./components/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import Products from "./pages/admin/Products";
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/" element={<Storefront />} />
             <Route path="/categories" element={<CategoriesPage />} />
             <Route path="/shop" element={<Shop />} />
+            <Route path="/product/:slug" element={<ProductDetail />} />
             <Route path="/login" element={<Login />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/my-orders" element={<MyOrders />} />
