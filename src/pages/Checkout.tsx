@@ -255,7 +255,7 @@ const Checkout = () => {
               </div>
 
               <div className="relative">
-                <Input name="phone" value={form.phone} onChange={handleChange} placeholder="Phone" />
+                <Input name="phone" value={form.phone} onChange={handleChange} placeholder="Phone *" className={isFieldInvalid("phone") ? "border-destructive ring-1 ring-destructive" : ""} />
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
