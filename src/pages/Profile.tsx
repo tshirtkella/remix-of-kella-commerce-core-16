@@ -231,7 +231,7 @@ const Profile = () => {
             <h2 className="font-heading font-semibold text-foreground flex items-center gap-2">
               <ShoppingBag className="h-4 w-4" /> My Orders
             </h2>
-            <Link to="/admin/orders" className="text-xs text-primary hover:underline font-medium">
+            <Link to="/my-orders" className="text-xs text-primary hover:underline font-medium">
               View All
             </Link>
           </div>
