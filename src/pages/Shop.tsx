@@ -9,6 +9,7 @@ const Shop = () => {
   const { format } = useCurrency();
   const [searchParams] = useSearchParams();
   const categorySlug = searchParams.get("category");
+  const searchQuery = searchParams.get("search") || "";
 
   const { data: categories = [] } = useQuery({
     queryKey: ["shop-categories"],
