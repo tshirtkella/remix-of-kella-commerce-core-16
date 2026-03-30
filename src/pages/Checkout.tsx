@@ -266,6 +266,7 @@ const Checkout = () => {
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
+                {isFieldInvalid("phone") && <p className="text-xs text-destructive mt-1">Phone is required</p>}
               </div>
 
               <div className="flex items-center gap-2">
