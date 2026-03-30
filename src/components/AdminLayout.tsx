@@ -19,7 +19,7 @@ const navItems = [
 ];
 
 const AdminLayout = () => {
-  const { user, loading, isAdmin, signOut } = useAuth();
+  const { user, loading, isStaff, signOut } = useAuth();
   const location = useLocation();
 
   if (loading) {
