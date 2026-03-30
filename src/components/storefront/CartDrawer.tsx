@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useToast } from "@/hooks/use-toast";
 
 const CartDrawer = () => {
   const { items, removeItem, updateQuantity, totalItems, totalPrice, isCartOpen, setIsCartOpen } = useCart();
   const { format } = useCurrency();
+  const { toast } = useToast();
 
   return (
     <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
@@ -60,9 +62,13 @@ const CartDrawer = () => {
                       </button>
                       <span className="text-sm font-medium w-6 text-center">{item.quantity}</span>
                       <button
-                        onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
-                        className="h-7 w-7 rounded border border-border flex items-center justify-center hover:bg-muted transition"
-                      >
+                        onClick={() => {
+                          const success = updateQuantity(item.variantId, item.quantity + 1);
+                          if (!success) {
+                            toast({ title: "Stock limit reached!", description: `Only ${item.maxStock} available.`, variant: "destructive" });
+                          }
+                        }}
+                        className="h-7 w-7 rounded border border-border flex items-center justify-center hover:bg-muted transition">
                         <Plus className="h-3 w-3" />
                       </button>
                       <button

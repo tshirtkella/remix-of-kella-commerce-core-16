@@ -10,13 +10,14 @@ export interface CartItem {
   quantity: number;
   image?: string;
   slug: string;
+  maxStock?: number;
 }
 
 interface CartContextType {
   items: CartItem[];
-  addItem: (item: CartItem) => void;
+  addItem: (item: CartItem) => boolean;
   removeItem: (variantId: string) => void;
-  updateQuantity: (variantId: string, quantity: number) => void;
+  updateQuantity: (variantId: string, quantity: number) => boolean;
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
@@ -43,30 +44,40 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem(CART_KEY, JSON.stringify(items));
   }, [items]);
 
-  const addItem = (item: CartItem) => {
+  const addItem = (item: CartItem): boolean => {
+    const existing = items.find((i) => i.variantId === item.variantId);
+    const currentQty = existing ? existing.quantity : 0;
+    const maxStock = item.maxStock ?? Infinity;
+    if (currentQty + item.quantity > maxStock) {
+      return false; // stock exceeded
+    }
     setItems((prev) => {
-      const existing = prev.find((i) => i.variantId === item.variantId);
-      if (existing) {
+      const ex = prev.find((i) => i.variantId === item.variantId);
+      if (ex) {
         return prev.map((i) =>
           i.variantId === item.variantId
-            ? { ...i, quantity: i.quantity + item.quantity }
+            ? { ...i, quantity: i.quantity + item.quantity, maxStock: item.maxStock }
             : i
         );
       }
       return [...prev, item];
     });
     setIsCartOpen(true);
+    return true;
   };
 
   const removeItem = (variantId: string) => {
     setItems((prev) => prev.filter((i) => i.variantId !== variantId));
   };
 
-  const updateQuantity = (variantId: string, quantity: number) => {
-    if (quantity <= 0) return removeItem(variantId);
+  const updateQuantity = (variantId: string, quantity: number): boolean => {
+    if (quantity <= 0) { removeItem(variantId); return true; }
+    const item = items.find((i) => i.variantId === variantId);
+    if (item?.maxStock && quantity > item.maxStock) return false;
     setItems((prev) =>
       prev.map((i) => (i.variantId === variantId ? { ...i, quantity } : i))
     );
+    return true;
   };
 
   const clearCart = () => setItems([]);
