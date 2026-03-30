@@ -42,6 +42,10 @@ const Checkout = () => {
   const [emailOffers, setEmailOffers] = useState(true);
   const [saveInfo, setSaveInfo] = useState(false);
   const [textOffers, setTextOffers] = useState(false);
+  const [attempted, setAttempted] = useState(false);
+
+  const requiredFields = ["email", "firstName", "phone", "address", "city"] as const;
+  const isFieldInvalid = (field: string) => attempted && !form[field as keyof typeof form]?.trim();
 
   // Fetch enabled payment methods from admin settings
   const { data: paymentSettings } = useQuery({
@@ -87,6 +91,7 @@ const Checkout = () => {
   };
 
   const handlePlaceOrder = async () => {
+    setAttempted(true);
     if (!form.email || !form.firstName || !form.phone || !form.address || !form.city) {
       toast({ title: "Please fill in all required fields", variant: "destructive" });
       return;
@@ -207,8 +212,10 @@ const Checkout = () => {
                 name="email"
                 value={form.email}
                 onChange={handleChange}
-                placeholder="Email or mobile phone number"
+                placeholder="Email or mobile phone number *"
+                className={isFieldInvalid("email") ? "border-destructive ring-1 ring-destructive" : ""}
               />
+              {isFieldInvalid("email") && <p className="text-xs text-destructive">Email is required</p>}
               <div className="flex items-center gap-2">
                 <Checkbox id="emailOffers" checked={emailOffers} onCheckedChange={(v) => setEmailOffers(!!v)} />
                 <Label htmlFor="emailOffers" className="text-sm cursor-pointer">Email me with news and offers</Label>
@@ -228,22 +235,27 @@ const Checkout = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Input name="firstName" value={form.firstName} onChange={handleChange} placeholder="First name" />
+                  <Input name="firstName" value={form.firstName} onChange={handleChange} placeholder="First name *" className={isFieldInvalid("firstName") ? "border-destructive ring-1 ring-destructive" : ""} />
+                  {isFieldInvalid("firstName") && <p className="text-xs text-destructive mt-1">First name is required</p>}
                 </div>
                 <div>
                   <Input name="lastName" value={form.lastName} onChange={handleChange} placeholder="Last name" />
                 </div>
               </div>
 
-              <Input name="address" value={form.address} onChange={handleChange} placeholder="Address" />
+              <Input name="address" value={form.address} onChange={handleChange} placeholder="Address *" className={isFieldInvalid("address") ? "border-destructive ring-1 ring-destructive" : ""} />
+              {isFieldInvalid("address") && <p className="text-xs text-destructive mt-1">Address is required</p>}
 
               <div className="grid grid-cols-2 gap-3">
-                <Input name="city" value={form.city} onChange={handleChange} placeholder="City" />
+                <div>
+                  <Input name="city" value={form.city} onChange={handleChange} placeholder="City *" className={isFieldInvalid("city") ? "border-destructive ring-1 ring-destructive" : ""} />
+                  {isFieldInvalid("city") && <p className="text-xs text-destructive mt-1">City is required</p>}
+                </div>
                 <Input name="zip" value={form.zip} onChange={handleChange} placeholder="Postal code (optional)" />
               </div>
 
               <div className="relative">
-                <Input name="phone" value={form.phone} onChange={handleChange} placeholder="Phone" />
+                <Input name="phone" value={form.phone} onChange={handleChange} placeholder="Phone *" className={isFieldInvalid("phone") ? "border-destructive ring-1 ring-destructive" : ""} />
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -254,6 +266,7 @@ const Checkout = () => {
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
+                {isFieldInvalid("phone") && <p className="text-xs text-destructive mt-1">Phone is required</p>}
               </div>
 
               <div className="flex items-center gap-2">
