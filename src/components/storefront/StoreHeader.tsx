@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
-import { Shirt, ShoppingBag, Search, User, LogOut, Shield } from "lucide-react";
+import { Shirt, ShoppingBag, User, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
+import ProductSearch from "./ProductSearch";
 
 const StoreHeader = () => {
   const { user, isStaff, signOut } = useAuth();
