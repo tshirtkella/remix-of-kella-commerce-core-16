@@ -3,6 +3,7 @@ import { Shirt, ShoppingBag, Search, User, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
+import { useCart } from "@/hooks/useCart";
 
 const StoreHeader = () => {
   const { user, isStaff, signOut } = useAuth();
