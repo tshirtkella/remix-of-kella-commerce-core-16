@@ -389,6 +389,57 @@ export type Database = {
         }
         Relationships: []
       }
+      shipping_addresses: {
+        Row: {
+          address_line1: string
+          address_line2: string | null
+          city: string
+          country: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          is_default: boolean | null
+          label: string | null
+          phone: string | null
+          state: string | null
+          updated_at: string
+          user_id: string
+          zip: string | null
+        }
+        Insert: {
+          address_line1: string
+          address_line2?: string | null
+          city: string
+          country?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          is_default?: boolean | null
+          label?: string | null
+          phone?: string | null
+          state?: string | null
+          updated_at?: string
+          user_id: string
+          zip?: string | null
+        }
+        Update: {
+          address_line1?: string
+          address_line2?: string | null
+          city?: string
+          country?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          is_default?: boolean | null
+          label?: string | null
+          phone?: string | null
+          state?: string | null
+          updated_at?: string
+          user_id?: string
+          zip?: string | null
+        }
+        Relationships: []
+      }
       store_settings: {
         Row: {
           id: string
