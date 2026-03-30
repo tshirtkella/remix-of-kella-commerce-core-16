@@ -156,7 +156,11 @@ const Storefront = () => {
                     >
                       {/* Placeholder image */}
                       <div className="aspect-square bg-muted/50 flex items-center justify-center relative overflow-hidden">
-                        <span className="text-4xl opacity-20">👕</span>
+                        {product.images?.[0]?.url ? (
+                          <img src={product.images[0].url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        ) : (
+                          <span className="text-4xl opacity-20">👕</span>
+                        )}
                         {totalStock === 0 && (
                           <span className="absolute top-2 left-2 text-[10px] font-bold bg-destructive text-destructive-foreground px-2 py-0.5 rounded">
                             SOLD OUT
