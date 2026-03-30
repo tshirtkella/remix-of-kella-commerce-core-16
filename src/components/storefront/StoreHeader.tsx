@@ -45,6 +45,11 @@ const StoreHeader = () => {
                     </Button>
                   </Link>
                 )}
+                <Link to="/profile">
+                  <Button variant="ghost" size="icon" className="h-9 w-9" aria-label="Profile">
+                    <User className="h-4 w-4" />
+                  </Button>
+                </Link>
                 <Button
                   variant="ghost"
                   size="icon"
