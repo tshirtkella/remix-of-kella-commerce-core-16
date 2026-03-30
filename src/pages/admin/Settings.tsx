@@ -50,6 +50,9 @@ const Settings = () => {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<AppRole>("user");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [stripeKey, setStripeKey] = useState("");
+  const [stripeEnabled, setStripeEnabled] = useState(false);
+  const [savingStripe, setSavingStripe] = useState(false);
 
   // Currency
   const { data: currency, isLoading: currLoading } = useQuery({
