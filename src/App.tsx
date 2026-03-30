@@ -4,11 +4,14 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
+import { CartProvider } from "@/hooks/useCart";
+import CartDrawer from "@/components/storefront/CartDrawer";
 import Login from "./pages/Login";
 import Storefront from "./pages/Storefront";
 import CategoriesPage from "./pages/Categories";
 import Shop from "./pages/Shop";
 import ProductDetail from "./pages/ProductDetail";
+import Checkout from "./pages/Checkout";
 import AdminLayout from "./components/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import Products from "./pages/admin/Products";
@@ -35,30 +38,34 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Storefront />} />
-            <Route path="/categories" element={<CategoriesPage />} />
-            <Route path="/shop" element={<Shop />} />
-            <Route path="/product/:slug" element={<ProductDetail />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/my-orders" element={<MyOrders />} />
-            <Route path="/shipping-address" element={<ShippingAddress />} />
-            <Route path="/support" element={<Support />} />
-            <Route path="/about-us" element={<AboutUs />} />
-            <Route path="/settings" element={<UserSettings />} />
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<Dashboard />} />
-              <Route path="products" element={<Products />} />
-              <Route path="products/new" element={<ProductForm />} />
-              <Route path="categories" element={<Categories />} />
-              <Route path="orders" element={<Orders />} />
-              <Route path="customers" element={<Customers />} />
-              <Route path="offers" element={<Offers />} />
-              <Route path="settings" element={<Settings />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <CartProvider>
+            <CartDrawer />
+            <Routes>
+              <Route path="/" element={<Storefront />} />
+              <Route path="/categories" element={<CategoriesPage />} />
+              <Route path="/shop" element={<Shop />} />
+              <Route path="/product/:slug" element={<ProductDetail />} />
+              <Route path="/checkout" element={<Checkout />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/my-orders" element={<MyOrders />} />
+              <Route path="/shipping-address" element={<ShippingAddress />} />
+              <Route path="/support" element={<Support />} />
+              <Route path="/about-us" element={<AboutUs />} />
+              <Route path="/settings" element={<UserSettings />} />
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<Dashboard />} />
+                <Route path="products" element={<Products />} />
+                <Route path="products/new" element={<ProductForm />} />
+                <Route path="categories" element={<Categories />} />
+                <Route path="orders" element={<Orders />} />
+                <Route path="customers" element={<Customers />} />
+                <Route path="offers" element={<Offers />} />
+                <Route path="settings" element={<Settings />} />
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </CartProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
