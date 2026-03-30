@@ -299,52 +299,66 @@ const Checkout = () => {
               <h2 className="text-lg font-semibold">Payment</h2>
               <p className="text-xs text-muted-foreground">All transactions are secure and encrypted.</p>
               <RadioGroup value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)} className="space-y-0 border border-border rounded-lg overflow-hidden">
-                {/* SSLCOMMERZ */}
-                <label
-                  className={`flex items-center gap-3 p-4 cursor-pointer transition ${
-                    paymentMethod === "sslcommerz" ? "bg-primary/5 border-primary" : "hover:bg-muted/30"
-                  }`}
-                >
-                  <RadioGroupItem value="sslcommerz" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold">SSLCOMMERZ</span>
-                      <div className="flex gap-1">
-                        <span className="text-[10px] bg-blue-600 text-white px-1.5 py-0.5 rounded font-bold">VISA</span>
-                        <span className="text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded font-bold">MC</span>
-                        <span className="text-[10px] bg-blue-800 text-white px-1.5 py-0.5 rounded font-bold">AMEX</span>
-                        <span className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded font-bold">+2</span>
+                {enabledMethods.sslcommerz && (
+                  <>
+                    <label
+                      className={`flex items-center gap-3 p-4 cursor-pointer transition ${
+                        paymentMethod === "sslcommerz" ? "bg-primary/5 border-primary" : "hover:bg-muted/30"
+                      }`}
+                    >
+                      <RadioGroupItem value="sslcommerz" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold">SSLCOMMERZ</span>
+                          <div className="flex gap-1">
+                            <span className="text-[10px] bg-primary text-primary-foreground px-1.5 py-0.5 rounded font-bold">VISA</span>
+                            <span className="text-[10px] bg-destructive text-destructive-foreground px-1.5 py-0.5 rounded font-bold">MC</span>
+                            <span className="text-[10px] bg-accent text-accent-foreground px-1.5 py-0.5 rounded font-bold">AMEX</span>
+                            <span className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded font-bold">+2</span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                </label>
-                {paymentMethod === "sslcommerz" && (
-                  <div className="px-4 pb-4 bg-muted/20 border-t border-border">
-                    <p className="text-sm text-muted-foreground py-3">
-                      You'll be redirected to SSLCOMMERZ to complete your purchase.
-                    </p>
-                  </div>
+                    </label>
+                    {paymentMethod === "sslcommerz" && (
+                      <div className="px-4 pb-4 bg-muted/20 border-t border-border">
+                        <p className="text-sm text-muted-foreground py-3">
+                          You'll be redirected to SSLCOMMERZ to complete your purchase.
+                        </p>
+                      </div>
+                    )}
+                  </>
                 )}
 
-                {/* COD */}
-                <label
-                  className={`flex items-center gap-3 p-4 cursor-pointer transition border-t border-border ${
-                    paymentMethod === "cod" ? "bg-primary/5 border-primary" : "hover:bg-muted/30"
-                  }`}
-                >
-                  <RadioGroupItem value="cod" />
-                  <span className="text-sm font-medium">Cash on Delivery (COD)</span>
-                </label>
+                {enabledMethods.cod && (
+                  <label
+                    className={`flex items-center gap-3 p-4 cursor-pointer transition border-t border-border ${
+                      paymentMethod === "cod" ? "bg-primary/5 border-primary" : "hover:bg-muted/30"
+                    }`}
+                  >
+                    <RadioGroupItem value="cod" />
+                    <span className="text-sm font-medium">Cash on Delivery (COD)</span>
+                  </label>
+                )}
 
-                {/* bKash */}
-                <label
-                  className={`flex items-center gap-3 p-4 cursor-pointer transition border-t border-border ${
-                    paymentMethod === "bkash" ? "bg-primary/5 border-primary" : "hover:bg-muted/30"
-                  }`}
-                >
-                  <RadioGroupItem value="bkash" />
-                  <span className="text-sm font-medium text-pink-600">bkash</span>
-                </label>
+                {enabledMethods.bkash && (
+                  <>
+                    <label
+                      className={`flex items-center gap-3 p-4 cursor-pointer transition border-t border-border ${
+                        paymentMethod === "bkash" ? "bg-primary/5 border-primary" : "hover:bg-muted/30"
+                      }`}
+                    >
+                      <RadioGroupItem value="bkash" />
+                      <span className="text-sm font-semibold text-accent-foreground">bkash</span>
+                    </label>
+                    {paymentMethod === "bkash" && enabledMethods.bkash_instructions && (
+                      <div className="px-4 pb-4 bg-muted/20 border-t border-border">
+                        <p className="text-sm text-muted-foreground py-3 whitespace-pre-line">
+                          {enabledMethods.bkash_instructions}
+                        </p>
+                      </div>
+                    )}
+                  </>
+                )}
               </RadioGroup>
             </section>
 
