@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useToast } from "@/hooks/use-toast";
 
 const CartDrawer = () => {
   const { items, removeItem, updateQuantity, totalItems, totalPrice, isCartOpen, setIsCartOpen } = useCart();
   const { format } = useCurrency();
+  const { toast } = useToast();
 
   return (
     <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
