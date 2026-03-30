@@ -53,10 +53,11 @@ const Checkout = () => {
         .like("key", "payment_%");
       const map: Record<string, string> = {};
       (data ?? []).forEach((r: any) => { map[r.key] = r.value; });
+      const hasAnySettings = Object.keys(map).length > 0;
       return {
-        sslcommerz: map.payment_sslcommerz_enabled === "true",
-        cod: map.payment_cod_enabled !== "false", // default true
-        bkash: map.payment_bkash_enabled === "true",
+        sslcommerz: hasAnySettings ? map.payment_sslcommerz_enabled === "true" : true,
+        cod: map.payment_cod_enabled !== "false",
+        bkash: hasAnySettings ? map.payment_bkash_enabled === "true" : true,
         bkash_number: map.payment_bkash_number || "",
         bkash_instructions: map.payment_bkash_instructions || "",
       };
@@ -64,7 +65,7 @@ const Checkout = () => {
     staleTime: 30_000,
   });
 
-  const enabledMethods = paymentSettings ?? { sslcommerz: false, cod: true, bkash: false, bkash_number: "", bkash_instructions: "" };
+  const enabledMethods = paymentSettings ?? { sslcommerz: true, cod: true, bkash: true, bkash_number: "", bkash_instructions: "" };
 
   const [form, setForm] = useState({
     email: "",
@@ -348,7 +349,7 @@ const Checkout = () => {
                       }`}
                     >
                       <RadioGroupItem value="bkash" />
-                      <span className="text-sm font-semibold text-accent-foreground">bkash</span>
+                      <span className="text-sm font-semibold text-foreground">bkash</span>
                     </label>
                     {paymentMethod === "bkash" && enabledMethods.bkash_instructions && (
                       <div className="px-4 pb-4 bg-muted/20 border-t border-border">
