@@ -1,0 +1,1 @@
+ALTER TABLE public.offers ADD COLUMN banner_image text DEFAULT NULL;

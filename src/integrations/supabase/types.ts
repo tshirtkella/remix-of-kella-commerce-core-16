@@ -151,6 +151,7 @@ export type Database = {
       offers: {
         Row: {
           badge_label: string | null
+          banner_image: string | null
           bg_color: string | null
           created_at: string
           cta_link: string | null
@@ -170,6 +171,7 @@ export type Database = {
         }
         Insert: {
           badge_label?: string | null
+          banner_image?: string | null
           bg_color?: string | null
           created_at?: string
           cta_link?: string | null
@@ -189,6 +191,7 @@ export type Database = {
         }
         Update: {
           badge_label?: string | null
+          banner_image?: string | null
           bg_color?: string | null
           created_at?: string
           cta_link?: string | null
