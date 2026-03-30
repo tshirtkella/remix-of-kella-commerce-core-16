@@ -235,7 +235,8 @@ const Checkout = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Input name="firstName" value={form.firstName} onChange={handleChange} placeholder="First name" />
+                  <Input name="firstName" value={form.firstName} onChange={handleChange} placeholder="First name *" className={isFieldInvalid("firstName") ? "border-destructive ring-1 ring-destructive" : ""} />
+                  {isFieldInvalid("firstName") && <p className="text-xs text-destructive mt-1">First name is required</p>}
                 </div>
                 <div>
                   <Input name="lastName" value={form.lastName} onChange={handleChange} placeholder="Last name" />
