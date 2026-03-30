@@ -35,8 +35,13 @@ const StoreHeader = () => {
               <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Search products..." className="pl-9 w-48 h-9 bg-muted/50 border-0 focus-visible:ring-1" />
             </div>
-            <Button variant="ghost" size="icon" className="h-9 w-9">
+            <Button variant="ghost" size="icon" className="h-9 w-9 relative" onClick={() => setIsCartOpen(true)}>
               <ShoppingBag className="h-4 w-4" />
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                  {totalItems}
+                </span>
+              )}
             </Button>
             {user ? (
               <>
