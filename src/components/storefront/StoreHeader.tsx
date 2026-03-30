@@ -7,6 +7,7 @@ import { useCart } from "@/hooks/useCart";
 
 const StoreHeader = () => {
   const { user, isStaff, signOut } = useAuth();
+  const { totalItems, setIsCartOpen } = useCart();
 
   return (
     <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-lg border-b border-border">
