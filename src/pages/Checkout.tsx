@@ -349,7 +349,7 @@ const Checkout = () => {
                       }`}
                     >
                       <RadioGroupItem value="bkash" />
-                      <span className="text-sm font-semibold text-accent-foreground">bkash</span>
+                      <span className="text-sm font-semibold text-foreground">bkash</span>
                     </label>
                     {paymentMethod === "bkash" && enabledMethods.bkash_instructions && (
                       <div className="px-4 pb-4 bg-muted/20 border-t border-border">
