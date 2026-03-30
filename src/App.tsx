@@ -16,6 +16,10 @@ import Customers from "./pages/admin/Customers";
 import Settings from "./pages/admin/Settings";
 import Offers from "./pages/admin/Offers";
 import Profile from "./pages/Profile";
+import MyOrders from "./pages/MyOrders";
+import ShippingAddress from "./pages/ShippingAddress";
+import Support from "./pages/Support";
+import AboutUs from "./pages/AboutUs";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +35,10 @@ const App = () => (
             <Route path="/" element={<Storefront />} />
             <Route path="/login" element={<Login />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/my-orders" element={<MyOrders />} />
+            <Route path="/shipping-address" element={<ShippingAddress />} />
+            <Route path="/support" element={<Support />} />
+            <Route path="/about-us" element={<AboutUs />} />
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<Dashboard />} />
               <Route path="products" element={<Products />} />

@@ -148,9 +148,9 @@ const Profile = () => {
 
   const menuItems = [
     { label: "Edit Profile", icon: Edit2, onClick: () => setEditOpen(true) },
-    { label: "Shipping Address", icon: MapPin, onClick: () => toast({ title: "Coming soon" }) },
-    { label: "Support", icon: Headphones, onClick: () => toast({ title: "Coming soon" }) },
-    { label: "About Us", icon: Info, onClick: () => toast({ title: "Coming soon" }) },
+    { label: "Shipping Address", icon: MapPin, onClick: () => navigate("/shipping-address") },
+    { label: "Support", icon: Headphones, onClick: () => navigate("/support") },
+    { label: "About Us", icon: Info, onClick: () => navigate("/about-us") },
   ];
 
   return (
@@ -231,7 +231,7 @@ const Profile = () => {
             <h2 className="font-heading font-semibold text-foreground flex items-center gap-2">
               <ShoppingBag className="h-4 w-4" /> My Orders
             </h2>
-            <Link to="/admin/orders" className="text-xs text-primary hover:underline font-medium">
+            <Link to="/my-orders" className="text-xs text-primary hover:underline font-medium">
               View All
             </Link>
           </div>
@@ -240,7 +240,7 @@ const Profile = () => {
               <button
                 key={s.label}
                 className="flex flex-col items-center gap-1.5 p-2 rounded-xl hover:bg-muted/50 transition-colors"
-                onClick={() => navigate("/admin/orders")}
+                onClick={() => navigate("/my-orders")}
               >
                 <div className={`h-10 w-10 rounded-full ${s.bg} flex items-center justify-center`}>
                   <s.icon className={`h-5 w-5 ${s.color}`} />
