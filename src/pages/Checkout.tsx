@@ -212,8 +212,10 @@ const Checkout = () => {
                 name="email"
                 value={form.email}
                 onChange={handleChange}
-                placeholder="Email or mobile phone number"
+                placeholder="Email or mobile phone number *"
+                className={isFieldInvalid("email") ? "border-destructive ring-1 ring-destructive" : ""}
               />
+              {isFieldInvalid("email") && <p className="text-xs text-destructive">Email is required</p>}
               <div className="flex items-center gap-2">
                 <Checkbox id="emailOffers" checked={emailOffers} onCheckedChange={(v) => setEmailOffers(!!v)} />
                 <Label htmlFor="emailOffers" className="text-sm cursor-pointer">Email me with news and offers</Label>
