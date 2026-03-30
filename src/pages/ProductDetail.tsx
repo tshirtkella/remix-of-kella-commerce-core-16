@@ -353,6 +353,8 @@ const ProductDetail = () => {
         </div>
       </main>
 
+      <RelatedProducts categoryId={product.category_id} currentProductId={product.id} />
+
       <StoreFooter />
     </div>
   );
