@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import Login from "./pages/Login";
 import Storefront from "./pages/Storefront";
 import CategoriesPage from "./pages/Categories";
+import Shop from "./pages/Shop";
 import AdminLayout from "./components/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import Products from "./pages/admin/Products";
