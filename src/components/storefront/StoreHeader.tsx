@@ -1,9 +1,12 @@
 import { Link } from "react-router-dom";
-import { Shirt, ShoppingBag, Search, User } from "lucide-react";
+import { Shirt, ShoppingBag, Search, User, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/hooks/useAuth";
 
 const StoreHeader = () => {
+  const { user, isStaff, signOut } = useAuth();
+
   return (
     <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-lg border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -33,11 +36,32 @@ const StoreHeader = () => {
             <Button variant="ghost" size="icon" className="h-9 w-9">
               <ShoppingBag className="h-4 w-4" />
             </Button>
-            <Link to="/login">
-              <Button variant="ghost" size="icon" className="h-9 w-9">
-                <User className="h-4 w-4" />
-              </Button>
-            </Link>
+            {user ? (
+              <>
+                {isStaff && (
+                  <Link to="/admin">
+                    <Button variant="ghost" size="icon" className="h-9 w-9" aria-label="Admin panel">
+                      <Shield className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9"
+                  onClick={() => void signOut()}
+                  aria-label="Sign out"
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </>
+            ) : (
+              <Link to="/login">
+                <Button variant="ghost" size="icon" className="h-9 w-9" aria-label="Login">
+                  <User className="h-4 w-4" />
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -13,9 +13,14 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, user, isStaff, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (loading || !user) return;
+    navigate(isStaff ? "/admin" : "/", { replace: true });
+  }, [loading, user, isStaff, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +31,6 @@ const Login = () => {
         toast({ title: "Account created", description: "Check your email to confirm." });
       } else {
         await signIn(email, password);
-        navigate("/");
       }
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
