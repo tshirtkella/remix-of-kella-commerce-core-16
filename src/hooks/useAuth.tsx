@@ -32,8 +32,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const applySession = (nextSession: Session | null) => {
       if (!isMounted) return;
+      const nextUser = nextSession?.user ?? null;
       setSession(nextSession);
-      setUser(nextSession?.user ?? null);
+      setUser(nextUser);
+      setRolesLoading(Boolean(nextUser));
       setAuthReady(true);
     };
 
@@ -50,6 +52,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (!isMounted) return;
         setSession(null);
         setUser(null);
+        setRolesLoading(false);
         setAuthReady(true);
       });
 
