@@ -366,7 +366,7 @@ const Dashboard = () => {
                       <span className="text-xs text-muted-foreground">
                         {order.order_items?.length ?? 0} item{(order.order_items?.length ?? 0) !== 1 ? "s" : ""}
                       </span>
-                      <span className="font-heading font-bold text-sm">${Number(order.total).toFixed(2)}</span>
+                      <span className="font-heading font-bold text-sm">৳{Number(order.total).toLocaleString()}</span>
                     </div>
                   </div>
                 ))}
