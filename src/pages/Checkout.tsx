@@ -514,17 +514,35 @@ const Checkout = () => {
               </div>
 
               {/* Discount */}
-              <div className="flex gap-2 pt-2">
-                <Input
-                  value={discountCode}
-                  onChange={(e) => setDiscountCode(e.target.value)}
-                  placeholder="Discount code or gift card"
-                  className="flex-1"
-                />
-                <Button variant="outline" onClick={() => toast({ title: "Discount codes coming soon!" })}>
-                  Apply
-                </Button>
-              </div>
+              {appliedPromo ? (
+                <div className="flex items-center justify-between bg-success/10 rounded-lg px-3 py-2 pt-2">
+                  <div className="flex items-center gap-2">
+                    <Tag className="h-4 w-4 text-success" />
+                    <span className="text-sm font-mono font-bold text-success">{appliedPromo.code}</span>
+                    <Badge variant="secondary" className="text-[10px] bg-success/20 text-success border-0">
+                      {appliedPromo.discount_type === "percentage" ? `${appliedPromo.discount_value}% off` : `৳${appliedPromo.discount_value} off`}
+                    </Badge>
+                  </div>
+                  <button onClick={removePromo} className="text-muted-foreground hover:text-destructive transition">
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <div className="pt-2 space-y-1">
+                  <div className="flex gap-2">
+                    <Input
+                      value={discountCode}
+                      onChange={(e) => { setDiscountCode(e.target.value); setPromoError(""); }}
+                      placeholder="Discount code or gift card"
+                      className={`flex-1 uppercase font-mono ${promoError ? "border-destructive" : ""}`}
+                    />
+                    <Button variant="outline" onClick={handleApplyPromo} disabled={promoLoading}>
+                      {promoLoading ? "..." : "Apply"}
+                    </Button>
+                  </div>
+                  {promoError && <p className="text-xs text-destructive">{promoError}</p>}
+                </div>
+              )}
 
               <Separator />
 
