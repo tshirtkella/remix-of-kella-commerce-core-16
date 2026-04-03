@@ -108,8 +108,46 @@ const Checkout = () => {
   });
 
   const shippingCost = SHIPPING_ZONES.find((z) => z.value === shippingZone)?.price ?? 60;
-  const tax = Math.round(totalPrice * 0.075 * 100) / 100;
-  const grandTotal = totalPrice + shippingCost + tax;
+  const promoDiscount = appliedPromo
+    ? appliedPromo.discount_type === "percentage"
+      ? Math.round(totalPrice * (appliedPromo.discount_value / 100) * 100) / 100
+      : Math.min(appliedPromo.discount_value, totalPrice)
+    : 0;
+  const discountedSubtotal = totalPrice - promoDiscount;
+  const tax = Math.round(discountedSubtotal * 0.075 * 100) / 100;
+  const grandTotal = discountedSubtotal + shippingCost + tax;
+
+  const handleApplyPromo = async () => {
+    const code = discountCode.trim().toUpperCase();
+    if (!code) return;
+    setPromoLoading(true);
+    setPromoError("");
+    try {
+      const { data, error } = await supabase
+        .from("promo_codes")
+        .select("*")
+        .eq("code", code)
+        .eq("is_active", true)
+        .single();
+      if (error || !data) { setPromoError("Invalid promo code"); return; }
+      if (data.ends_at && new Date(data.ends_at) < new Date()) { setPromoError("This code has expired"); return; }
+      if (data.starts_at && new Date(data.starts_at) > new Date()) { setPromoError("This code is not yet active"); return; }
+      if (data.max_uses && data.used_count >= data.max_uses) { setPromoError("This code has reached its usage limit"); return; }
+      if (totalPrice < data.min_order_amount) { setPromoError(`Minimum order amount is ৳${data.min_order_amount}`); return; }
+      setAppliedPromo({ code: data.code, discount_type: data.discount_type, discount_value: Number(data.discount_value), id: data.id });
+      toast({ title: "Promo code applied!", description: `${data.discount_type === "percentage" ? data.discount_value + "%" : "৳" + data.discount_value} discount` });
+    } catch {
+      setPromoError("Failed to validate code");
+    } finally {
+      setPromoLoading(false);
+    }
+  };
+
+  const removePromo = () => {
+    setAppliedPromo(null);
+    setDiscountCode("");
+    setPromoError("");
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
