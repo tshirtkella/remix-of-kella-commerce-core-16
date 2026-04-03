@@ -115,6 +115,9 @@ const Settings = () => {
         bkash_enabled: paymentSettings.payment_bkash_enabled === "true",
         bkash_number: paymentSettings.payment_bkash_number || "",
         bkash_instructions: paymentSettings.payment_bkash_instructions || "",
+        nagad_enabled: paymentSettings.payment_nagad_enabled === "true",
+        nagad_number: paymentSettings.payment_nagad_number || "",
+        nagad_instructions: paymentSettings.payment_nagad_instructions || "",
       });
     }
   }, [paymentSettings]);
