@@ -553,6 +553,12 @@ const Checkout = () => {
                   <span className="text-muted-foreground">Subtotal</span>
                   <span>{format(totalPrice)}</span>
                 </div>
+                {promoDiscount > 0 && (
+                  <div className="flex justify-between text-success">
+                    <span>Discount ({appliedPromo?.code})</span>
+                    <span>-{format(promoDiscount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground flex items-center gap-1">
                     Shipping
