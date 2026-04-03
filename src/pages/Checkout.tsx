@@ -90,12 +90,15 @@ const Checkout = () => {
         bkash: hasAnySettings ? map.payment_bkash_enabled === "true" : true,
         bkash_number: map.payment_bkash_number || "",
         bkash_instructions: map.payment_bkash_instructions || "",
+        nagad: hasAnySettings ? map.payment_nagad_enabled === "true" : true,
+        nagad_number: map.payment_nagad_number || "",
+        nagad_instructions: map.payment_nagad_instructions || "",
       };
     },
     staleTime: 30_000,
   });
 
-  const enabledMethods = paymentSettings ?? { sslcommerz: true, cod: true, bkash: true, bkash_number: "", bkash_instructions: "" };
+  const enabledMethods = paymentSettings ?? { sslcommerz: true, cod: true, bkash: true, bkash_number: "", bkash_instructions: "", nagad: true, nagad_number: "", nagad_instructions: "" };
 
   const [form, setForm] = useState({
     email: "",
