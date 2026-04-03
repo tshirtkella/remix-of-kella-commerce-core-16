@@ -69,6 +69,9 @@ const Settings = () => {
     bkash_enabled: boolean;
     bkash_number: string;
     bkash_instructions: string;
+    nagad_enabled: boolean;
+    nagad_number: string;
+    nagad_instructions: string;
   }
 
   const defaultPaymentConfig: PaymentConfig = {
@@ -80,6 +83,9 @@ const Settings = () => {
     bkash_enabled: false,
     bkash_number: "",
     bkash_instructions: "",
+    nagad_enabled: false,
+    nagad_number: "",
+    nagad_instructions: "",
   };
 
   const [paymentConfig, setPaymentConfig] = useState<PaymentConfig>(defaultPaymentConfig);
