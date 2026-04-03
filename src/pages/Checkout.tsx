@@ -227,12 +227,9 @@ const Checkout = () => {
       const { error: itemsErr } = await supabase.from("order_items").insert(orderItems);
       if (itemsErr) throw itemsErr;
 
-      // Increment promo code used_count
+      // Increment promo code used_count via secure function
       if (appliedPromo) {
-        await supabase
-          .from("promo_codes")
-          .update({ used_count: (appliedPromo as any).used_count ? (appliedPromo as any).used_count + 1 : 1 })
-          .eq("id", appliedPromo.id);
+        await supabase.rpc("increment_promo_usage", { _promo_id: appliedPromo.id });
       }
 
       if (paymentMethod === "sslcommerz") {
