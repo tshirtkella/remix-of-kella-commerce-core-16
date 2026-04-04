@@ -106,6 +106,44 @@ export type Database = {
         }
         Relationships: []
       }
+      draft_order_messages: {
+        Row: {
+          created_at: string
+          draft_order_id: string
+          id: string
+          is_read: boolean
+          message: string
+          sender: string
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          draft_order_id: string
+          id?: string
+          is_read?: boolean
+          message: string
+          sender?: string
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          draft_order_id?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          sender?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "draft_order_messages_draft_order_id_fkey"
+            columns: ["draft_order_id"]
+            isOneToOne: false
+            referencedRelation: "draft_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       draft_orders: {
         Row: {
           address_line1: string | null
