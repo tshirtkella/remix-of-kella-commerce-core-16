@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { AlertTriangle, Trash2, Eye, Clock, User, Phone, Mail, MapPin, ShoppingBag } from "lucide-react";
+import { AlertTriangle, Trash2, Eye, Clock, User, Phone, Mail, MapPin, ShoppingBag, MessageCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
