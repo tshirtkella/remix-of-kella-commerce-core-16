@@ -297,6 +297,7 @@ const Checkout = () => {
         toast({ title: "Nagad payment coming soon!", description: "Your order has been placed as COD for now." });
       }
 
+      await deleteDraft();
       clearCart();
       toast({ title: "Order placed!", description: `Order #${orderNumber} confirmed.` });
       navigate("/");
