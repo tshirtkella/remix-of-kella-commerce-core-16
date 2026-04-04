@@ -106,6 +106,69 @@ export type Database = {
         }
         Relationships: []
       }
+      draft_orders: {
+        Row: {
+          address_line1: string | null
+          address_line2: string | null
+          cart_items: Json | null
+          city: string | null
+          country: string | null
+          created_at: string
+          email: string | null
+          first_name: string | null
+          id: string
+          last_name: string | null
+          notes: string | null
+          payment_method: string | null
+          phone: string | null
+          session_id: string
+          state: string | null
+          total: number | null
+          updated_at: string
+          zip: string | null
+        }
+        Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          cart_items?: Json | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          notes?: string | null
+          payment_method?: string | null
+          phone?: string | null
+          session_id: string
+          state?: string | null
+          total?: number | null
+          updated_at?: string
+          zip?: string | null
+        }
+        Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          cart_items?: Json | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          notes?: string | null
+          payment_method?: string | null
+          phone?: string | null
+          session_id?: string
+          state?: string | null
+          total?: number | null
+          updated_at?: string
+          zip?: string | null
+        }
+        Relationships: []
+      }
       images: {
         Row: {
           alt_text: string | null
