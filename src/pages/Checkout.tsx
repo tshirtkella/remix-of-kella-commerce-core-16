@@ -85,9 +85,9 @@ const Checkout = () => {
     } catch (e) {
       // Silent fail for draft saving
     }
-  }, [items, totalPrice]);
+  }, [items, totalPrice, sessionId]);
 
-  const debouncedSaveDraft = useCallback((formData: typeof form, pm: string) => {
+  const debouncedSaveDraft = useCallback((formData: Record<string, string>, pm: string) => {
     if (draftTimerRef.current) clearTimeout(draftTimerRef.current);
     draftTimerRef.current = setTimeout(() => saveDraft(formData, pm), 1500);
   }, [saveDraft]);
@@ -99,9 +99,6 @@ const Checkout = () => {
 
   // Delete draft on successful order
   const deleteDraft = async () => {
-    const sessionId = typeof sessionIdRef.current === "function"
-      ? (sessionIdRef.current as () => string)()
-      : sessionIdRef.current;
     try {
       await supabase.from("draft_orders").delete().eq("session_id", sessionId);
       sessionStorage.removeItem("checkout_session_id");
