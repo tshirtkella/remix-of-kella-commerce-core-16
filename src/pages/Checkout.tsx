@@ -59,11 +59,7 @@ const Checkout = () => {
   });
   const draftTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const saveDraft = useCallback(async (formData: typeof form, pm: string) => {
-    const sessionId = typeof sessionIdRef.current === "function" 
-      ? (sessionIdRef.current as () => string)() 
-      : sessionIdRef.current;
-    // Only save if at least one field has data
+  const saveDraft = useCallback(async (formData: Record<string, string>, pm: string) => {
     const hasData = Object.values(formData).some((v) => v?.trim());
     if (!hasData) return;
 
