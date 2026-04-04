@@ -2,7 +2,7 @@ import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import {
   Package, LayoutGrid, LogOut, Shirt, ShoppingCart,
-  Users, Settings, BarChart3, Megaphone, ChevronRight, Bell, Tag,
+  Users, Settings, BarChart3, Megaphone, ChevronRight, Bell, Tag, AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
