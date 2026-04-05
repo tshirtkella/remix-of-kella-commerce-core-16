@@ -55,6 +55,7 @@ const Products = () => {
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Product</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Category</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Price</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Discount</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Variants</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
               </tr>
