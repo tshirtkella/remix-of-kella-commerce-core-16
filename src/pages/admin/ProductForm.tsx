@@ -178,6 +178,12 @@ const ProductForm = () => {
               <Input type="number" step="0.01" value={basePrice} onChange={(e) => setBasePrice(e.target.value)} placeholder="29.99" />
             </div>
             <div className="space-y-2">
+              <Label>Discount (%)</Label>
+              <Input type="number" min="0" max="100" value={discountPercentage} onChange={(e) => setDiscountPercentage(e.target.value)} placeholder="0" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
               <Label>Category</Label>
               <select
                 value={categoryId}
