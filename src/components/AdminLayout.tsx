@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 const navItems = [
   { to: "/admin", icon: BarChart3, label: "Dashboard", exact: true },
   { to: "/admin/products", icon: Package, label: "Products" },
+  { to: "/admin/inventory", icon: Warehouse, label: "Inventory" },
   { to: "/admin/categories", icon: LayoutGrid, label: "Categories" },
   { to: "/admin/orders", icon: ShoppingCart, label: "Orders" },
   { to: "/admin/customers", icon: Users, label: "Customers" },
