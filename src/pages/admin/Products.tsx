@@ -99,8 +99,8 @@ const Products = () => {
                         <span className="text-muted-foreground text-xs">
                           {product.variants?.length ?? 0} variants · {totalStock} in stock
                         </span>
-                        {totalStock > 0 && totalStock <= 5 && (
-                          <span className="inline-flex items-center gap-0.5 text-destructive/80" title="Low stock">
+                        {totalStock > 0 && totalStock <= 3 && (
+                          <span className="inline-flex items-center gap-0.5 text-yellow-600" title="Low stock">
                             <AlertTriangle className="h-3.5 w-3.5" />
                           </span>
                         )}
