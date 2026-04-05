@@ -88,6 +88,7 @@ const ProductForm = () => {
           description: description || null,
           base_price: parseFloat(basePrice),
           category_id: categoryId || null,
+          discount_percentage: discountPercentage ? parseFloat(discountPercentage) : 0,
         })
         .select()
         .single();
