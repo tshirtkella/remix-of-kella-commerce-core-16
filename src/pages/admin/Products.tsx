@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Package } from "lucide-react";
+import { Plus, Package, AlertTriangle } from "lucide-react";
 
 const Products = () => {
   const { data: products, isLoading } = useQuery({
@@ -55,6 +55,7 @@ const Products = () => {
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Product</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Category</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Price</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Discount</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Variants</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
               </tr>
@@ -76,11 +77,39 @@ const Products = () => {
                     <td className="px-4 py-3 text-muted-foreground">
                       {product.categories?.name ?? "—"}
                     </td>
-                    <td className="px-4 py-3 font-medium">${Number(product.base_price).toFixed(2)}</td>
+                    <td className="px-4 py-3 font-medium">
+                      ${Number(product.base_price).toFixed(2)}
+                      {Number((product as any).discount_percentage) > 0 && (
+                        <span className="ml-1 text-xs text-muted-foreground line-through">
+                          ${(Number(product.base_price) / (1 - Number((product as any).discount_percentage) / 100)).toFixed(2)}
+                        </span>
+                      )}
+                    </td>
                     <td className="px-4 py-3">
-                      <span className="text-muted-foreground">
-                        {product.variants?.length ?? 0} variants · {totalStock} in stock
-                      </span>
+                      {Number((product as any).discount_percentage) > 0 ? (
+                        <Badge variant="destructive" className="text-xs">
+                          {Number((product as any).discount_percentage)}% OFF
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-muted-foreground text-xs">
+                          {product.variants?.length ?? 0} variants · {totalStock} in stock
+                        </span>
+                        {totalStock > 0 && totalStock <= 5 && (
+                          <span className="inline-flex items-center gap-0.5 text-destructive/80" title="Low stock">
+                            <AlertTriangle className="h-3.5 w-3.5" />
+                          </span>
+                        )}
+                        {totalStock === 0 && (product.variants?.length ?? 0) > 0 && (
+                          <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
+                            Out of stock
+                          </Badge>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3">
                       <Badge variant={product.is_active ? "default" : "secondary"}>

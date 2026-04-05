@@ -28,6 +28,7 @@ const ProductForm = () => {
   const [description, setDescription] = useState("");
   const [basePrice, setBasePrice] = useState("");
   const [categoryId, setCategoryId] = useState("");
+  const [discountPercentage, setDiscountPercentage] = useState("");
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [variants, setVariants] = useState<VariantInput[]>([
@@ -87,6 +88,7 @@ const ProductForm = () => {
           description: description || null,
           base_price: parseFloat(basePrice),
           category_id: categoryId || null,
+          discount_percentage: discountPercentage ? parseFloat(discountPercentage) : 0,
         })
         .select()
         .single();
@@ -175,6 +177,12 @@ const ProductForm = () => {
               <Label>Base Price ($)</Label>
               <Input type="number" step="0.01" value={basePrice} onChange={(e) => setBasePrice(e.target.value)} placeholder="29.99" />
             </div>
+            <div className="space-y-2">
+              <Label>Discount (%)</Label>
+              <Input type="number" min="0" max="100" value={discountPercentage} onChange={(e) => setDiscountPercentage(e.target.value)} placeholder="0" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Category</Label>
               <select

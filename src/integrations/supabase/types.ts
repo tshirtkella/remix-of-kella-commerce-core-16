@@ -425,6 +425,7 @@ export type Database = {
           category_id: string | null
           created_at: string
           description: string | null
+          discount_percentage: number
           id: string
           is_active: boolean
           name: string
@@ -436,6 +437,7 @@ export type Database = {
           category_id?: string | null
           created_at?: string
           description?: string | null
+          discount_percentage?: number
           id?: string
           is_active?: boolean
           name: string
@@ -447,6 +449,7 @@ export type Database = {
           category_id?: string | null
           created_at?: string
           description?: string | null
+          discount_percentage?: number
           id?: string
           is_active?: boolean
           name?: string
