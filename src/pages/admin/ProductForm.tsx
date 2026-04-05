@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Plus, Trash2, Upload, X } from "lucide-react";
 
 interface VariantInput {
+  id?: string;
   size: string;
   color: string;
   sku: string;
@@ -19,6 +20,8 @@ interface VariantInput {
 }
 
 const ProductForm = () => {
+  const { id } = useParams<{ id: string }>();
+  const isEditing = Boolean(id);
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -31,6 +34,7 @@ const ProductForm = () => {
   const [discountPercentage, setDiscountPercentage] = useState("");
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [existingImages, setExistingImages] = useState<{ id: string; url: string; position: number }[]>([]);
   const [variants, setVariants] = useState<VariantInput[]>([
     { size: "M", color: "Black", sku: "", inventory_quantity: 0, price_override: "" },
   ]);
@@ -44,9 +48,55 @@ const ProductForm = () => {
     },
   });
 
+  // Load existing product data for editing
+  const { data: existingProduct, isLoading: loadingProduct } = useQuery({
+    queryKey: ["product-edit", id],
+    queryFn: async () => {
+      if (!id) return null;
+      const { data, error } = await supabase
+        .from("products")
+        .select("*, variants(*), images(*)")
+        .eq("id", id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: isEditing,
+  });
+
+  useEffect(() => {
+    if (existingProduct) {
+      setName(existingProduct.name);
+      setSlug(existingProduct.slug);
+      setDescription(existingProduct.description ?? "");
+      setBasePrice(String(existingProduct.base_price));
+      setCategoryId(existingProduct.category_id ?? "");
+      setDiscountPercentage(existingProduct.discount_percentage ? String(existingProduct.discount_percentage) : "");
+      setExistingImages(
+        (existingProduct.images as any[])
+          ?.sort((a: any, b: any) => a.position - b.position)
+          .map((img: any) => ({ id: img.id, url: img.url, position: img.position })) ?? []
+      );
+      if (existingProduct.variants && (existingProduct.variants as any[]).length > 0) {
+        setVariants(
+          (existingProduct.variants as any[]).map((v: any) => ({
+            id: v.id,
+            size: v.size,
+            color: v.color,
+            sku: v.sku,
+            inventory_quantity: v.inventory_quantity,
+            price_override: v.price_override ? String(v.price_override) : "",
+          }))
+        );
+      }
+    }
+  }, [existingProduct]);
+
   const handleNameChange = (val: string) => {
     setName(val);
-    setSlug(val.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""));
+    if (!isEditing) {
+      setSlug(val.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""));
+    }
   };
 
   const addVariant = () => {
@@ -78,79 +128,112 @@ const ProductForm = () => {
     setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const createMutation = useMutation({
+  const removeExistingImage = async (imageId: string) => {
+    setExistingImages((prev) => prev.filter((img) => img.id !== imageId));
+  };
+
+  const saveMutation = useMutation({
     mutationFn: async () => {
-      const { data: product, error: pErr } = await supabase
-        .from("products")
-        .insert({
-          name,
-          slug,
-          description: description || null,
-          base_price: parseFloat(basePrice),
-          category_id: categoryId || null,
-          discount_percentage: discountPercentage ? parseFloat(discountPercentage) : 0,
-        })
-        .select()
-        .single();
+      const productData = {
+        name,
+        slug,
+        description: description || null,
+        base_price: parseFloat(basePrice),
+        category_id: categoryId || null,
+        discount_percentage: discountPercentage ? parseFloat(discountPercentage) : 0,
+      };
 
-      if (pErr) throw pErr;
+      let productId: string;
 
+      if (isEditing && id) {
+        const { error: pErr } = await supabase.from("products").update(productData).eq("id", id);
+        if (pErr) throw pErr;
+        productId = id;
+
+        // Delete removed existing images
+        const keepImageIds = existingImages.map((img) => img.id);
+        if (existingProduct?.images) {
+          const toDelete = (existingProduct.images as any[]).filter((img: any) => !keepImageIds.includes(img.id));
+          for (const img of toDelete) {
+            await supabase.from("images").delete().eq("id", img.id);
+          }
+        }
+
+        // Delete all existing variants and re-insert
+        await supabase.from("variants").delete().eq("product_id", id);
+      } else {
+        const { data: product, error: pErr } = await supabase
+          .from("products")
+          .insert(productData)
+          .select()
+          .single();
+        if (pErr) throw pErr;
+        productId = product.id;
+      }
+
+      // Insert variants
       if (variants.length > 0) {
         const variantRows = variants.map((v) => ({
-          product_id: product.id,
+          product_id: productId,
           size: v.size,
           color: v.color,
           sku: v.sku,
           inventory_quantity: v.inventory_quantity,
           price_override: v.price_override ? parseFloat(v.price_override) : null,
         }));
-
         const { error: vErr } = await supabase.from("variants").insert(variantRows);
         if (vErr) throw vErr;
       }
 
-      // Upload images
+      // Upload new images
+      const startPosition = existingImages.length;
       for (let i = 0; i < imageFiles.length; i++) {
         const file = imageFiles[i];
         const ext = file.name.split(".").pop();
-        const path = `${product.id}/${Date.now()}-${i}.${ext}`;
+        const path = `${productId}/${Date.now()}-${i}.${ext}`;
 
-        const { error: upErr } = await supabase.storage
-          .from("product-images")
-          .upload(path, file);
+        const { error: upErr } = await supabase.storage.from("product-images").upload(path, file);
         if (upErr) throw upErr;
 
-        const { data: urlData } = supabase.storage
-          .from("product-images")
-          .getPublicUrl(path);
+        const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(path);
 
         await supabase.from("images").insert({
-          product_id: product.id,
+          product_id: productId,
           url: urlData.publicUrl,
           alt_text: name,
-          position: i,
+          position: startPosition + i,
         });
       }
 
-      return product;
+      return productId;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
-      toast({ title: "Product created!" });
-      navigate("/admin");
+      queryClient.invalidateQueries({ queryKey: ["product-edit", id] });
+      toast({ title: isEditing ? "Product updated!" : "Product created!" });
+      navigate("/admin/products");
     },
     onError: (err: any) => {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     },
   });
 
+  if (isEditing && loadingProduct) {
+    return (
+      <div className="p-6 lg:p-8 max-w-3xl space-y-6">
+        <div className="h-8 w-48 bg-muted animate-pulse rounded" />
+        <div className="h-64 bg-muted animate-pulse rounded-lg" />
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 lg:p-8 max-w-3xl space-y-6">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/admin")}>
+        <Button variant="ghost" size="icon" onClick={() => navigate("/admin/products")}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h1 className="font-heading text-2xl font-bold">New Product</h1>
+        <h1 className="font-heading text-2xl font-bold">{isEditing ? "Edit Product" : "New Product"}</h1>
       </div>
 
       <Card>
@@ -206,8 +289,20 @@ const ProductForm = () => {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-3">
+            {existingImages.map((img) => (
+              <div key={img.id} className="relative w-24 h-24 rounded-lg overflow-hidden border border-border group">
+                <img src={img.url} alt="" className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => removeExistingImage(img.id)}
+                  className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
             {imagePreviews.map((src, i) => (
-              <div key={i} className="relative w-24 h-24 rounded-lg overflow-hidden border border-border group">
+              <div key={`new-${i}`} className="relative w-24 h-24 rounded-lg overflow-hidden border border-border group">
                 <img src={src} alt="" className="w-full h-full object-cover" />
                 <button
                   type="button"
@@ -274,9 +369,9 @@ const ProductForm = () => {
       </Card>
 
       <div className="flex gap-3 justify-end">
-        <Button variant="outline" onClick={() => navigate("/admin")}>Cancel</Button>
-        <Button onClick={() => createMutation.mutate()} disabled={!name || !slug || !basePrice || createMutation.isPending}>
-          {createMutation.isPending ? "Creating..." : "Create Product"}
+        <Button variant="outline" onClick={() => navigate("/admin/products")}>Cancel</Button>
+        <Button onClick={() => saveMutation.mutate()} disabled={!name || !slug || !basePrice || saveMutation.isPending}>
+          {saveMutation.isPending ? (isEditing ? "Saving..." : "Creating...") : (isEditing ? "Save Changes" : "Create Product")}
         </Button>
       </div>
     </div>
