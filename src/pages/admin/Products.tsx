@@ -100,7 +100,7 @@ const Products = () => {
                           {product.variants?.length ?? 0} variants · {totalStock} in stock
                         </span>
                         {totalStock > 0 && totalStock <= 5 && (
-                          <span className="inline-flex items-center gap-0.5 text-amber-600 dark:text-amber-400" title="Low stock">
+                          <span className="inline-flex items-center gap-0.5 text-destructive/80" title="Low stock">
                             <AlertTriangle className="h-3.5 w-3.5" />
                           </span>
                         )}
