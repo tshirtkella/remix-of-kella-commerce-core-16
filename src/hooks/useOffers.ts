@@ -13,6 +13,7 @@ interface Offer {
   placement: string;
   cta_text: string | null;
   cta_link: string | null;
+  banner_image: string | null;
   is_active: boolean;
   priority: number;
   starts_at: string | null;
