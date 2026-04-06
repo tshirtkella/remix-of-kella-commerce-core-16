@@ -17,7 +17,7 @@ const RelatedProducts = ({ categoryId, currentProductId }: RelatedProductsProps)
     queryFn: async () => {
       let query = supabase
         .from("products")
-        .select("id, name, slug, base_price, images(url, position), variants(price_override, inventory_quantity, is_active)")
+        .select("id, name, slug, base_price, discount_percentage, images(url, position), variants(price_override, inventory_quantity, is_active)")
         .eq("is_active", true)
         .neq("id", currentProductId)
         .limit(4);
