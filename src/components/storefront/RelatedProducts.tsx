@@ -67,7 +67,14 @@ const RelatedProducts = ({ categoryId, currentProductId }: RelatedProductsProps)
               </div>
               <div className="p-3 space-y-1">
                 <p className="text-sm font-medium line-clamp-1 group-hover:text-primary transition-colors">{p.name}</p>
-                <p className="text-sm font-bold">{format(Number(minPrice))}</p>
+                {p.discount_percentage > 0 ? (
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-bold">{format(Number(minPrice) * (1 - p.discount_percentage / 100))}</p>
+                    <p className="text-xs text-muted-foreground line-through">{format(Number(minPrice))}</p>
+                  </div>
+                ) : (
+                  <p className="text-sm font-bold">{format(Number(minPrice))}</p>
+                )}
               </div>
             </Link>
           );

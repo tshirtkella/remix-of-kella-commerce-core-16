@@ -108,11 +108,23 @@ const Shop = () => {
                   {totalStock > 0 && totalStock < 5 && (
                     <span className="absolute top-2 left-2 text-[10px] font-bold bg-warning text-warning-foreground px-2 py-0.5 rounded">LOW STOCK</span>
                   )}
+                  {product.discount_percentage > 0 && (
+                    <span className="absolute top-2 right-2 text-[10px] font-bold bg-destructive text-destructive-foreground px-2 py-0.5 rounded">
+                      {product.discount_percentage}% OFF
+                    </span>
+                  )}
                 </div>
                 <div className="p-3">
                   <p className="text-xs text-muted-foreground">{(product as any).categories?.name || "Uncategorized"}</p>
                   <h3 className="font-semibold text-sm mt-0.5 group-hover:text-primary transition-colors line-clamp-1">{product.name}</h3>
-                  <p className="font-bold text-base mt-1">{format(Number(minPrice))}</p>
+                  {product.discount_percentage > 0 ? (
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="font-bold text-base">{format(Number(minPrice) * (1 - product.discount_percentage / 100))}</p>
+                      <p className="text-xs text-muted-foreground line-through">{format(Number(minPrice))}</p>
+                    </div>
+                  ) : (
+                    <p className="font-bold text-base mt-1">{format(Number(minPrice))}</p>
+                  )}
                 </div>
               </Link>
             );

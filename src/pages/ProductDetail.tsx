@@ -246,7 +246,15 @@ const ProductDetail = () => {
 
             <h1 className="text-2xl sm:text-3xl font-heading font-bold leading-tight">{product.name}</h1>
 
-            <p className="text-2xl font-bold">{format(Number(displayPrice))}</p>
+            {product.discount_percentage > 0 ? (
+              <div className="flex items-center gap-3">
+                <p className="text-2xl font-bold">{format(Number(displayPrice) * (1 - product.discount_percentage / 100))}</p>
+                <p className="text-lg text-muted-foreground line-through">{format(Number(displayPrice))}</p>
+                <Badge className="bg-destructive/10 text-destructive border-0 text-xs">{product.discount_percentage}% OFF</Badge>
+              </div>
+            ) : (
+              <p className="text-2xl font-bold">{format(Number(displayPrice))}</p>
+            )}
 
             {/* Shipping info */}
             <div className="space-y-1.5 text-sm text-muted-foreground">
