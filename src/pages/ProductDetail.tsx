@@ -6,13 +6,13 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { useCart } from "@/hooks/useCart";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Minus, Plus, ChevronLeft, ChevronRight, Truck, Loader2,
-} from "lucide-react";
+import { Minus, Plus, ChevronLeft, ChevronRight, Loader2, Share2, Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import StoreHeader from "@/components/storefront/StoreHeader";
 import StoreFooter from "@/components/storefront/StoreFooter";
 import RelatedProducts from "@/components/storefront/RelatedProducts";
+import ProductDeliveryInfo from "@/components/storefront/ProductDeliveryInfo";
+import ProductReviews from "@/components/storefront/ProductReviews";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -93,49 +93,26 @@ const ProductDetail = () => {
   };
 
   const handleAddToCart = () => {
-    if (!selectedSize) {
-      toast({ title: "Please select a size", variant: "destructive" });
-      return;
-    }
-    if (stock === 0) {
-      toast({ title: "This variant is out of stock", variant: "destructive" });
-      return;
-    }
+    if (!selectedSize) { toast({ title: "Please select a size", variant: "destructive" }); return; }
+    if (stock === 0) { toast({ title: "This variant is out of stock", variant: "destructive" }); return; }
     const item = buildCartItem();
     if (item) {
       const success = addItem(item);
-      if (!success) {
-        toast({ title: "Stock limit reached!", description: `Only ${stock} items available for this variant.`, variant: "destructive" });
-        return;
-      }
+      if (!success) { toast({ title: "Stock limit reached!", description: `Only ${stock} items available.`, variant: "destructive" }); return; }
       toast({ title: "Added to cart!", description: `${product?.name} — ${selectedColor} / ${selectedSize} × ${quantity}` });
     }
   };
 
   const handleBuyNow = () => {
-    if (!selectedSize) {
-      toast({ title: "Please select a size", variant: "destructive" });
-      return;
-    }
-    if (stock === 0) {
-      toast({ title: "This variant is out of stock", variant: "destructive" });
-      return;
-    }
+    if (!selectedSize) { toast({ title: "Please select a size", variant: "destructive" }); return; }
+    if (stock === 0) { toast({ title: "This variant is out of stock", variant: "destructive" }); return; }
     const item = buildCartItem();
     if (item) {
       const success = addItem(item);
-      if (!success) {
-        toast({ title: "Stock limit reached!", description: `Only ${stock} items available for this variant.`, variant: "destructive" });
-        return;
-      }
+      if (!success) { toast({ title: "Stock limit reached!", description: `Only ${stock} items available.`, variant: "destructive" }); return; }
       navigate("/checkout");
     }
   };
-
-  // Expected delivery date (7 days from now)
-  const deliveryDate = new Date();
-  deliveryDate.setDate(deliveryDate.getDate() + 7);
-  const deliveryStr = deliveryDate.toLocaleDateString("en-US", { month: "short", day: "2-digit" });
 
   if (isLoading) {
     return (
@@ -165,9 +142,9 @@ const ProductDetail = () => {
     <div className="min-h-screen bg-background text-foreground">
       <StoreHeader />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-xs text-muted-foreground mb-6">
+        <nav className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
           <Link to="/" className="hover:text-foreground transition">Home</Link>
           <span>/</span>
           <Link to="/shop" className="hover:text-foreground transition">Shop</Link>
@@ -180,11 +157,12 @@ const ProductDetail = () => {
             </>
           )}
           <span>/</span>
-          <span className="text-foreground">{product.name}</span>
+          <span className="text-foreground truncate max-w-[200px]">{product.name}</span>
         </nav>
 
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
-          {/* Image Gallery */}
+        {/* 3-column: Images | Info | Delivery */}
+        <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr_280px] gap-6">
+          {/* Column 1: Image Gallery */}
           <div className="space-y-3">
             <div className="relative aspect-square rounded-lg overflow-hidden bg-muted/30 border border-border">
               {images.length > 0 ? (
@@ -202,26 +180,27 @@ const ProductDetail = () => {
                 <>
                   <button
                     onClick={() => setCurrentImage((p) => (p - 1 + images.length) % images.length)}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-background/80 backdrop-blur-sm border border-border flex items-center justify-center hover:bg-background transition"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm border border-border flex items-center justify-center hover:bg-background transition"
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => setCurrentImage((p) => (p + 1) % images.length)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-background/80 backdrop-blur-sm border border-border flex items-center justify-center hover:bg-background transition"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm border border-border flex items-center justify-center hover:bg-background transition"
                   >
                     <ChevronRight className="h-4 w-4" />
                   </button>
                 </>
               )}
             </div>
+            {/* Thumbnails */}
             {images.length > 1 && (
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {images.map((img: any, i: number) => (
                   <button
                     key={img.id}
                     onClick={() => setCurrentImage(i)}
-                    className={`shrink-0 w-16 h-16 rounded-md overflow-hidden border-2 transition ${
+                    className={`shrink-0 w-14 h-14 rounded-md overflow-hidden border-2 transition ${
                       i === currentImage ? "border-primary" : "border-border hover:border-primary/40"
                     }`}
                   >
@@ -232,55 +211,53 @@ const ProductDetail = () => {
             )}
           </div>
 
-          {/* Product Info */}
-          <div className="space-y-5">
+          {/* Column 2: Product Info */}
+          <div className="space-y-4">
+            <h1 className="text-xl sm:text-2xl font-heading font-bold leading-tight">{product.name}</h1>
+
+            {/* Share & Wishlist */}
+            <div className="flex items-center gap-3">
+              <button className="text-muted-foreground hover:text-foreground transition"><Share2 className="h-5 w-5" /></button>
+              <button className="text-muted-foreground hover:text-destructive transition"><Heart className="h-5 w-5" /></button>
+            </div>
+
             {/* Brand / Category */}
             {(product as any).categories && (
-              <Link
-                to={`/shop?category=${(product as any).categories.slug}`}
-                className="text-xs font-semibold uppercase tracking-widest text-muted-foreground hover:text-primary transition"
-              >
-                {(product as any).categories.name}
-              </Link>
+              <p className="text-sm text-muted-foreground">
+                Brand: <Link to={`/shop?category=${(product as any).categories.slug}`} className="text-primary hover:underline">{(product as any).categories.name}</Link>
+              </p>
             )}
 
-            <h1 className="text-2xl sm:text-3xl font-heading font-bold leading-tight">{product.name}</h1>
-
+            {/* Price */}
             {product.discount_percentage > 0 ? (
-              <div className="flex items-center gap-3">
-                <p className="text-2xl font-bold">{format(Number(displayPrice) * (1 - product.discount_percentage / 100))}</p>
-                <p className="text-lg text-muted-foreground line-through">{format(Number(displayPrice))}</p>
-                <Badge className="bg-destructive/10 text-destructive border-0 text-xs">{product.discount_percentage}% OFF</Badge>
+              <div className="space-y-1">
+                <p className="text-3xl font-bold text-primary">{format(Number(displayPrice) * (1 - product.discount_percentage / 100))}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm text-muted-foreground line-through">{format(Number(displayPrice))}</p>
+                  <Badge className="bg-destructive/10 text-destructive border-0 text-xs">-{product.discount_percentage}%</Badge>
+                </div>
               </div>
             ) : (
-              <p className="text-2xl font-bold">{format(Number(displayPrice))}</p>
+              <p className="text-3xl font-bold text-primary">{format(Number(displayPrice))}</p>
             )}
-
-            {/* Shipping info */}
-            <div className="space-y-1.5 text-sm text-muted-foreground">
-              <p className="underline cursor-pointer hover:text-foreground transition">Shipping calculated at checkout.</p>
-              <p className="flex items-center gap-1.5">
-                <Truck className="h-4 w-4" /> Expect Delivery by <span className="font-medium text-foreground">{deliveryStr}</span>.
-              </p>
-            </div>
 
             {product.description && (
               <p className="text-sm text-muted-foreground leading-relaxed">{product.description}</p>
             )}
 
             {/* Color Selector */}
-            {colors.length > 1 && (
+            {colors.length > 0 && (
               <div>
-                <p className="text-sm font-medium mb-2">Color</p>
+                <p className="text-sm font-medium mb-2">Color Family: <span className="text-foreground">{selectedColor}</span></p>
                 <div className="flex flex-wrap gap-2">
                   {colors.map((color) => (
                     <button
                       key={color as string}
                       onClick={() => { setSelectedColor(color as string); setSelectedSize(null); }}
-                      className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${
+                      className={`px-4 py-2 rounded border text-sm font-medium transition-all ${
                         selectedColor === color
-                          ? "border-foreground bg-foreground text-background"
-                          : "border-border text-foreground hover:border-foreground"
+                          ? "border-primary bg-primary/5 text-primary"
+                          : "border-border text-foreground hover:border-primary/50"
                       }`}
                     >
                       {color as string}
@@ -300,18 +277,17 @@ const ProductDetail = () => {
                       (v: any) => v.is_active && v.color === selectedColor && v.size === size
                     );
                     const outOfStock = variant && (variant as any).inventory_quantity === 0;
-
                     return (
                       <button
                         key={size as string}
                         onClick={() => !outOfStock && setSelectedSize(size as string)}
                         disabled={!!outOfStock}
-                        className={`min-w-[48px] px-4 py-2.5 rounded-full border text-sm font-medium transition-all ${
+                        className={`min-w-[48px] px-4 py-2 rounded border text-sm font-medium transition-all ${
                           outOfStock
                             ? "border-border text-muted-foreground/40 line-through cursor-not-allowed"
                             : selectedSize === size
-                              ? "border-foreground bg-foreground text-background"
-                              : "border-border text-foreground hover:border-foreground"
+                              ? "border-primary bg-primary/5 text-primary"
+                              : "border-border text-foreground hover:border-primary/50"
                         }`}
                       >
                         {size as string}
@@ -331,24 +307,21 @@ const ProductDetail = () => {
             {/* Quantity */}
             <div>
               <p className="text-sm font-medium mb-2">Quantity</p>
-              <div className="inline-flex items-center border border-border rounded-full">
+              <div className="inline-flex items-center border border-border rounded">
                 <button
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                  className="h-11 w-11 flex items-center justify-center hover:bg-muted/50 transition rounded-l-full"
+                  className="h-10 w-10 flex items-center justify-center hover:bg-muted/50 transition"
                 >
                   <Minus className="h-4 w-4" />
                 </button>
-                <span className="w-12 text-center font-medium text-sm">{quantity}</span>
+                <span className="w-12 text-center font-medium text-sm border-x border-border">{quantity}</span>
                 <button
                   onClick={() => {
                     const max = stock ?? Infinity;
-                    if (quantity >= max) {
-                      toast({ title: "Stock limit reached!", description: `Only ${stock} items available.`, variant: "destructive" });
-                      return;
-                    }
+                    if (quantity >= max) { toast({ title: "Stock limit reached!", variant: "destructive" }); return; }
                     setQuantity((q) => q + 1);
                   }}
-                  className="h-11 w-11 flex items-center justify-center hover:bg-muted/50 transition rounded-r-full"
+                  className="h-10 w-10 flex items-center justify-center hover:bg-muted/50 transition"
                 >
                   <Plus className="h-4 w-4" />
                 </button>
@@ -356,29 +329,32 @@ const ProductDetail = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-col gap-3 pt-2">
-              <Button
-                onClick={handleAddToCart}
-                disabled={stock === 0}
-                variant="outline"
-                className="w-full h-12 text-sm font-semibold rounded-md"
-              >
-                {stock === 0 ? "Out of Stock" : "Add to cart"}
+            <div className="flex gap-3 pt-2">
+              <Button onClick={handleBuyNow} disabled={stock === 0} className="flex-1 h-11 text-sm font-semibold">
+                Buy Now
               </Button>
-              <Button
-                onClick={handleBuyNow}
-                disabled={stock === 0}
-                className="w-full h-12 text-sm font-semibold rounded-md bg-[hsl(var(--destructive))] hover:bg-[hsl(var(--destructive))]/90 text-destructive-foreground"
-              >
-                Buy it now
+              <Button onClick={handleAddToCart} disabled={stock === 0} variant="outline" className="flex-1 h-11 text-sm font-semibold">
+                {stock === 0 ? "Out of Stock" : "Add to Cart"}
               </Button>
             </div>
           </div>
+
+          {/* Column 3: Delivery Info */}
+          <div className="hidden lg:block">
+            <ProductDeliveryInfo />
+          </div>
         </div>
+
+        {/* Mobile delivery info */}
+        <div className="lg:hidden mt-6">
+          <ProductDeliveryInfo />
+        </div>
+
+        {/* Reviews Section */}
+        <ProductReviews productId={product.id} productName={product.name} />
       </main>
 
       <RelatedProducts categoryId={product.category_id} currentProductId={product.id} />
-
       <StoreFooter />
     </div>
   );
