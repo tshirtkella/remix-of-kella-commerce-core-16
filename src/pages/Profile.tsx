@@ -12,8 +12,9 @@ import {
   ArrowLeft, LogOut, Settings, Camera, Loader2, Save,
   Clock, CheckCircle2, Truck, PackageCheck, XCircle,
   MapPin, Headphones, Info, ChevronRight, User, Phone, Edit2,
-  ShoppingBag,
+  ShoppingBag, Star,
 } from "lucide-react";
+import MyReviews from "@/components/profile/MyReviews";
 import { useToast } from "@/hooks/use-toast";
 
 interface Profile {
