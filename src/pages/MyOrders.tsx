@@ -5,12 +5,12 @@ import { Navigate, Link, useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useCurrency } from "@/hooks/useCurrency";
 import {
   ArrowLeft, Loader2, Package, Clock, Truck, CheckCircle2, XCircle,
-  PackageCheck, ChevronRight, Star, ShoppingBag, MapPin,
+  PackageCheck, ChevronRight, Star, MapPin,
 } from "lucide-react";
 
 interface OrderItem {
