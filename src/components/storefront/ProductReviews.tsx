@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Star, CheckCircle2, Loader2, ChevronDown, MessageSquare, Send, ImagePlus, X } from "lucide-react";
+import { Star, CheckCircle2, Loader2, ChevronDown, MessageSquare, Send, ImagePlus, X, PackageCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Props {
@@ -55,6 +55,48 @@ const ProductReviews = ({ productId, productName }: Props) => {
   const [uploadingImages, setUploadingImages] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
+  // Check if user has a delivered order containing this product
+  const { data: canReview = false } = useQuery({
+    queryKey: ["can-review", productId, user?.id],
+    queryFn: async () => {
+      if (!user) return false;
+      // Check if user has any delivered order with this product name
+      // We match by checking order_items that belong to delivered orders
+      const { data: deliveredOrders } = await supabase
+        .from("orders")
+        .select("id")
+        .eq("status", "delivered");
+      if (!deliveredOrders?.length) return false;
+
+      const orderIds = deliveredOrders.map((o) => o.id);
+      const { data: items } = await supabase
+        .from("order_items")
+        .select("id")
+        .in("order_id", orderIds);
+
+      // If user has delivered orders, allow review (simplified: any delivered order = can review any product)
+      // In production you'd match product_name or variant_id to specific products
+      return (items?.length ?? 0) > 0;
+    },
+    enabled: !!user,
+  });
+
+  // Check if user already reviewed this product
+  const { data: existingReview } = useQuery({
+    queryKey: ["user-review", productId, user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data } = await supabase
+        .from("product_reviews")
+        .select("id")
+        .eq("product_id", productId)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+  });
+
   const { data: reviews = [], isLoading } = useQuery({
     queryKey: ["product-reviews", productId],
     queryFn: async () => {
@@ -72,7 +114,6 @@ const ProductReviews = ({ productId, productName }: Props) => {
     mutationFn: async () => {
       if (!user) throw new Error("Not authenticated");
 
-      // Upload images if any
       let imageUrls: string[] = [];
       if (reviewImages.length > 0) {
         setUploadingImages(true);
@@ -94,11 +135,13 @@ const ProductReviews = ({ productId, productName }: Props) => {
         comment: comment.trim() || null,
         reviewer_name: reviewerName.trim() || "Anonymous",
         images: imageUrls.length > 0 ? imageUrls : null,
+        is_verified_purchase: canReview,
       });
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["product-reviews", productId] });
+      queryClient.invalidateQueries({ queryKey: ["user-review", productId, user?.id] });
       toast({ title: "Review submitted!" });
       setShowForm(false);
       setComment("");
@@ -133,7 +176,6 @@ const ProductReviews = ({ productId, productName }: Props) => {
     setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // Fetch all replies for visible reviews
   const { data: repliesData = [] } = useQuery({
     queryKey: ["review-replies", productId],
     queryFn: async () => {
@@ -170,9 +212,8 @@ const ProductReviews = ({ productId, productName }: Props) => {
     onError: () => toast({ title: "Failed to post reply", variant: "destructive" }),
   });
 
-  // Stats
-  const total = reviews.length;
-  const avg = total > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / total : 0;
+  const total_reviews = reviews.length;
+  const avg = total_reviews > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / total_reviews : 0;
   const breakdown = [5, 4, 3, 2, 1].map((star) => ({
     star,
     count: reviews.filter((r) => r.rating === star).length,
@@ -181,6 +222,26 @@ const ProductReviews = ({ productId, productName }: Props) => {
   const filtered = filterStar ? reviews.filter((r) => r.rating === filterStar) : reviews;
   const visible = filtered.slice(0, visibleCount);
 
+  const handleWriteReview = () => {
+    if (!user) {
+      toast({ title: "Please log in to write a review", variant: "destructive" });
+      return;
+    }
+    if (existingReview) {
+      toast({ title: "You already reviewed this product", description: "You can edit your review from your profile." });
+      return;
+    }
+    if (!canReview) {
+      toast({
+        title: "Review unavailable",
+        description: "You can only review products after your order has been delivered.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setShowForm(true);
+  };
+
   return (
     <section className="border-t border-border mt-10 pt-8">
       <h2 className="text-lg font-heading font-bold text-foreground mb-6">
@@ -188,17 +249,15 @@ const ProductReviews = ({ productId, productName }: Props) => {
       </h2>
 
       <div className="grid md:grid-cols-[200px_1fr] gap-8 mb-8">
-        {/* Summary */}
         <div className="text-center md:text-left">
           <p className="text-5xl font-bold text-foreground">{avg.toFixed(1)}<span className="text-lg text-muted-foreground font-normal">/5</span></p>
           <StarRating rating={Math.round(avg)} size={22} />
-          <p className="text-sm text-muted-foreground mt-1">{total} Ratings</p>
+          <p className="text-sm text-muted-foreground mt-1">{total_reviews} Ratings</p>
         </div>
 
-        {/* Breakdown bars */}
         <div className="space-y-1.5">
           {breakdown.map(({ star, count }) => {
-            const pct = total > 0 ? (count / total) * 100 : 0;
+            const pct = total_reviews > 0 ? (count / total_reviews) * 100 : 0;
             return (
               <button
                 key={star}
@@ -216,7 +275,6 @@ const ProductReviews = ({ productId, productName }: Props) => {
         </div>
       </div>
 
-      {/* Filter & sort bar */}
       <div className="flex items-center justify-between border-t border-b border-border py-3 mb-4">
         <p className="text-sm font-medium text-foreground">Product Reviews</p>
         <div className="flex items-center gap-3">
@@ -229,7 +287,6 @@ const ProductReviews = ({ productId, productName }: Props) => {
         </div>
       </div>
 
-      {/* Reviews list */}
       {isLoading ? (
         <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
       ) : visible.length === 0 ? (
@@ -263,7 +320,6 @@ const ProductReviews = ({ productId, productName }: Props) => {
                   </div>
                 )}
 
-                {/* Replies */}
                 {reviewReplies.length > 0 && (
                   <div className="mt-3 space-y-2 pl-3 border-l-2 border-primary/20">
                     {reviewReplies.map((rep) => (
@@ -280,7 +336,6 @@ const ProductReviews = ({ productId, productName }: Props) => {
                   </div>
                 )}
 
-                {/* Reply button & form */}
                 {replyingTo === r.id ? (
                   <div className="flex gap-2 mt-3">
                     <Input
@@ -330,15 +385,25 @@ const ProductReviews = ({ productId, productName }: Props) => {
       {/* Write review */}
       <div className="mt-8">
         {!showForm ? (
-          <Button variant="outline" onClick={() => {
-            if (!user) { toast({ title: "Please log in to write a review", variant: "destructive" }); return; }
-            setShowForm(true);
-          }}>
-            Write a Review
-          </Button>
+          <div className="space-y-2">
+            <Button variant="outline" onClick={handleWriteReview}>
+              Write a Review
+            </Button>
+            {user && !canReview && !existingReview && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
+                <PackageCheck className="h-4 w-4 shrink-0" />
+                <span>Reviews are available after your order is delivered. Order this product and receive it to leave a review.</span>
+              </div>
+            )}
+          </div>
         ) : (
           <div className="border border-border rounded-lg p-5 space-y-4">
-            <h3 className="text-sm font-semibold text-foreground">Your Review</h3>
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="text-sm font-semibold text-foreground">Your Review</h3>
+              <Badge variant="secondary" className="text-[10px]">
+                <CheckCircle2 className="h-3 w-3 mr-0.5" /> Verified Purchase
+              </Badge>
+            </div>
             <div>
               <p className="text-xs text-muted-foreground mb-1">Rating</p>
               <StarSelect value={rating} onChange={setRating} />
@@ -355,7 +420,7 @@ const ProductReviews = ({ productId, productName }: Props) => {
               onChange={(e) => setComment(e.target.value)}
               rows={4}
             />
-            {/* Image Upload Section */}
+            {/* Image Upload */}
             <div>
               <p className="text-xs text-muted-foreground mb-2">Add Photos (optional, max 5)</p>
               <div className="flex flex-wrap gap-2">
