@@ -588,6 +588,44 @@ export type Database = {
         }
         Relationships: []
       }
+      review_replies: {
+        Row: {
+          created_at: string
+          id: string
+          reply_text: string
+          review_id: string
+          reviewer_name: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reply_text: string
+          review_id: string
+          reviewer_name?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reply_text?: string
+          review_id?: string
+          reviewer_name?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_replies_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "product_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shipping_addresses: {
         Row: {
           address_line1: string
