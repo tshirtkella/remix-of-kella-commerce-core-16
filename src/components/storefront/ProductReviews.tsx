@@ -48,6 +48,8 @@ const ProductReviews = ({ productId, productName }: Props) => {
   const [reviewerName, setReviewerName] = useState("");
   const [filterStar, setFilterStar] = useState<number | null>(null);
   const [visibleCount, setVisibleCount] = useState(5);
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState("");
 
   const { data: reviews = [], isLoading } = useQuery({
     queryKey: ["product-reviews", productId],
