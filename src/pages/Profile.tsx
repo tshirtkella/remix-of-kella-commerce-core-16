@@ -225,6 +225,9 @@ const Profile = () => {
       {/* Content */}
       <div className="max-w-2xl mx-auto px-4 -mt-2 pb-8 space-y-4">
 
+        {/* Pending Reviews Banner */}
+        <PendingReviewsBanner />
+
         {/* My Orders */}
         <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
           <div className="flex items-center justify-between mb-4">
