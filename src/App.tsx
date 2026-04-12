@@ -31,6 +31,7 @@ import Support from "./pages/Support";
 import AboutUs from "./pages/AboutUs";
 import UserSettings from "./pages/UserSettings";
 import NotFound from "./pages/NotFound";
+import ReviewPromptDialog from "./components/storefront/ReviewPromptDialog";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +44,7 @@ const App = () => (
         <AuthProvider>
           <CartProvider>
             <CartDrawer />
+            <ReviewPromptDialog />
             <Routes>
               <Route path="/" element={<Storefront />} />
               <Route path="/categories" element={<CategoriesPage />} />

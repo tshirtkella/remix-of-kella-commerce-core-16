@@ -15,6 +15,7 @@ import {
   ShoppingBag, Star,
 } from "lucide-react";
 import MyReviews from "@/components/profile/MyReviews";
+import PendingReviewsBanner from "@/components/storefront/PendingReviewsBanner";
 import { useToast } from "@/hooks/use-toast";
 
 interface Profile {
