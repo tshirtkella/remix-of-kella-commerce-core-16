@@ -12,8 +12,9 @@ import {
   ArrowLeft, LogOut, Settings, Camera, Loader2, Save,
   Clock, CheckCircle2, Truck, PackageCheck, XCircle,
   MapPin, Headphones, Info, ChevronRight, User, Phone, Edit2,
-  ShoppingBag,
+  ShoppingBag, Star,
 } from "lucide-react";
+import MyReviews from "@/components/profile/MyReviews";
 import { useToast } from "@/hooks/use-toast";
 
 interface Profile {
@@ -270,6 +271,16 @@ const Profile = () => {
               </button>
             ))}
           </div>
+        </div>
+
+        {/* My Reviews */}
+        <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-heading font-semibold text-foreground flex items-center gap-2">
+              <Star className="h-4 w-4" /> My Reviews
+            </h2>
+          </div>
+          <MyReviews userId={user.id} />
         </div>
 
         {/* Logout */}
