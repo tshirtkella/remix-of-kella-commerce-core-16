@@ -355,12 +355,48 @@ const ProductReviews = ({ productId, productName }: Props) => {
               onChange={(e) => setComment(e.target.value)}
               rows={4}
             />
+            {/* Image Upload Section */}
+            <div>
+              <p className="text-xs text-muted-foreground mb-2">Add Photos (optional, max 5)</p>
+              <div className="flex flex-wrap gap-2">
+                {imagePreviews.map((src, i) => (
+                  <div key={i} className="relative group">
+                    <img src={src} alt="" className="w-16 h-16 rounded-lg object-cover border border-border" />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(i)}
+                      className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+                {reviewImages.length < 5 && (
+                  <button
+                    type="button"
+                    onClick={() => imageInputRef.current?.click()}
+                    className="w-16 h-16 rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center gap-0.5 text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    <ImagePlus className="h-5 w-5" />
+                    <span className="text-[9px]">Add</span>
+                  </button>
+                )}
+              </div>
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleImageSelect}
+                className="hidden"
+              />
+            </div>
             <div className="flex gap-2">
-              <Button onClick={() => submitMutation.mutate()} disabled={submitMutation.isPending}>
-                {submitMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
-                Submit Review
+              <Button onClick={() => submitMutation.mutate()} disabled={submitMutation.isPending || uploadingImages}>
+                {(submitMutation.isPending || uploadingImages) ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+                {uploadingImages ? "Uploading..." : "Submit Review"}
               </Button>
-              <Button variant="ghost" onClick={() => setShowForm(false)}>Cancel</Button>
+              <Button variant="ghost" onClick={() => { setShowForm(false); setReviewImages([]); setImagePreviews([]); }}>Cancel</Button>
             </div>
           </div>
         )}
