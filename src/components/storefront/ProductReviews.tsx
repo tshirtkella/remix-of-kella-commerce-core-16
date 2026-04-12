@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Star, CheckCircle2, Loader2, ChevronDown, MessageSquare, Send } from "lucide-react";
+import { Star, CheckCircle2, Loader2, ChevronDown, MessageSquare, Send, ImagePlus, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Props {
@@ -50,6 +50,10 @@ const ProductReviews = ({ productId, productName }: Props) => {
   const [visibleCount, setVisibleCount] = useState(5);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
+  const [reviewImages, setReviewImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const { data: reviews = [], isLoading } = useQuery({
     queryKey: ["product-reviews", productId],
@@ -66,12 +70,30 @@ const ProductReviews = ({ productId, productName }: Props) => {
 
   const submitMutation = useMutation({
     mutationFn: async () => {
+      if (!user) throw new Error("Not authenticated");
+
+      // Upload images if any
+      let imageUrls: string[] = [];
+      if (reviewImages.length > 0) {
+        setUploadingImages(true);
+        for (const file of reviewImages) {
+          const ext = file.name.split(".").pop();
+          const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+          const { error: uploadError } = await supabase.storage.from("review-images").upload(path, file);
+          if (uploadError) throw uploadError;
+          const { data: urlData } = supabase.storage.from("review-images").getPublicUrl(path);
+          imageUrls.push(urlData.publicUrl);
+        }
+        setUploadingImages(false);
+      }
+
       const { error } = await supabase.from("product_reviews").insert({
         product_id: productId,
-        user_id: user?.id,
+        user_id: user.id,
         rating,
         comment: comment.trim() || null,
         reviewer_name: reviewerName.trim() || "Anonymous",
+        images: imageUrls.length > 0 ? imageUrls : null,
       });
       if (error) throw error;
     },
@@ -82,9 +104,34 @@ const ProductReviews = ({ productId, productName }: Props) => {
       setComment("");
       setRating(5);
       setReviewerName("");
+      setReviewImages([]);
+      setImagePreviews([]);
     },
-    onError: () => toast({ title: "Failed to submit review", variant: "destructive" }),
+    onError: () => { setUploadingImages(false); toast({ title: "Failed to submit review", variant: "destructive" }); },
   });
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const validFiles = files.filter((f) => {
+      if (!f.type.startsWith("image/")) { toast({ title: "Only images allowed", variant: "destructive" }); return false; }
+      if (f.size > 5 * 1024 * 1024) { toast({ title: "Max 5MB per image", variant: "destructive" }); return false; }
+      return true;
+    });
+    const total = reviewImages.length + validFiles.length;
+    if (total > 5) { toast({ title: "Maximum 5 images", variant: "destructive" }); return; }
+    setReviewImages((prev) => [...prev, ...validFiles]);
+    validFiles.forEach((f) => {
+      const reader = new FileReader();
+      reader.onload = (ev) => setImagePreviews((prev) => [...prev, ev.target?.result as string]);
+      reader.readAsDataURL(f);
+    });
+    if (imageInputRef.current) imageInputRef.current.value = "";
+  };
+
+  const removeImage = (index: number) => {
+    setReviewImages((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
+  };
 
   // Fetch all replies for visible reviews
   const { data: repliesData = [] } = useQuery({
@@ -308,12 +355,48 @@ const ProductReviews = ({ productId, productName }: Props) => {
               onChange={(e) => setComment(e.target.value)}
               rows={4}
             />
+            {/* Image Upload Section */}
+            <div>
+              <p className="text-xs text-muted-foreground mb-2">Add Photos (optional, max 5)</p>
+              <div className="flex flex-wrap gap-2">
+                {imagePreviews.map((src, i) => (
+                  <div key={i} className="relative group">
+                    <img src={src} alt="" className="w-16 h-16 rounded-lg object-cover border border-border" />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(i)}
+                      className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+                {reviewImages.length < 5 && (
+                  <button
+                    type="button"
+                    onClick={() => imageInputRef.current?.click()}
+                    className="w-16 h-16 rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center gap-0.5 text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    <ImagePlus className="h-5 w-5" />
+                    <span className="text-[9px]">Add</span>
+                  </button>
+                )}
+              </div>
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleImageSelect}
+                className="hidden"
+              />
+            </div>
             <div className="flex gap-2">
-              <Button onClick={() => submitMutation.mutate()} disabled={submitMutation.isPending}>
-                {submitMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
-                Submit Review
+              <Button onClick={() => submitMutation.mutate()} disabled={submitMutation.isPending || uploadingImages}>
+                {(submitMutation.isPending || uploadingImages) ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+                {uploadingImages ? "Uploading..." : "Submit Review"}
               </Button>
-              <Button variant="ghost" onClick={() => setShowForm(false)}>Cancel</Button>
+              <Button variant="ghost" onClick={() => { setShowForm(false); setReviewImages([]); setImagePreviews([]); }}>Cancel</Button>
             </div>
           </div>
         )}
