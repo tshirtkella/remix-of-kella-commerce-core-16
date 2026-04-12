@@ -70,12 +70,30 @@ const ProductReviews = ({ productId, productName }: Props) => {
 
   const submitMutation = useMutation({
     mutationFn: async () => {
+      if (!user) throw new Error("Not authenticated");
+
+      // Upload images if any
+      let imageUrls: string[] = [];
+      if (reviewImages.length > 0) {
+        setUploadingImages(true);
+        for (const file of reviewImages) {
+          const ext = file.name.split(".").pop();
+          const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+          const { error: uploadError } = await supabase.storage.from("review-images").upload(path, file);
+          if (uploadError) throw uploadError;
+          const { data: urlData } = supabase.storage.from("review-images").getPublicUrl(path);
+          imageUrls.push(urlData.publicUrl);
+        }
+        setUploadingImages(false);
+      }
+
       const { error } = await supabase.from("product_reviews").insert({
         product_id: productId,
-        user_id: user?.id,
+        user_id: user.id,
         rating,
         comment: comment.trim() || null,
         reviewer_name: reviewerName.trim() || "Anonymous",
+        images: imageUrls.length > 0 ? imageUrls : null,
       });
       if (error) throw error;
     },
@@ -86,9 +104,34 @@ const ProductReviews = ({ productId, productName }: Props) => {
       setComment("");
       setRating(5);
       setReviewerName("");
+      setReviewImages([]);
+      setImagePreviews([]);
     },
-    onError: () => toast({ title: "Failed to submit review", variant: "destructive" }),
+    onError: () => { setUploadingImages(false); toast({ title: "Failed to submit review", variant: "destructive" }); },
   });
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const validFiles = files.filter((f) => {
+      if (!f.type.startsWith("image/")) { toast({ title: "Only images allowed", variant: "destructive" }); return false; }
+      if (f.size > 5 * 1024 * 1024) { toast({ title: "Max 5MB per image", variant: "destructive" }); return false; }
+      return true;
+    });
+    const total = reviewImages.length + validFiles.length;
+    if (total > 5) { toast({ title: "Maximum 5 images", variant: "destructive" }); return; }
+    setReviewImages((prev) => [...prev, ...validFiles]);
+    validFiles.forEach((f) => {
+      const reader = new FileReader();
+      reader.onload = (ev) => setImagePreviews((prev) => [...prev, ev.target?.result as string]);
+      reader.readAsDataURL(f);
+    });
+    if (imageInputRef.current) imageInputRef.current.value = "";
+  };
+
+  const removeImage = (index: number) => {
+    setReviewImages((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
+  };
 
   // Fetch all replies for visible reviews
   const { data: repliesData = [] } = useQuery({
