@@ -50,6 +50,10 @@ const ProductReviews = ({ productId, productName }: Props) => {
   const [visibleCount, setVisibleCount] = useState(5);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
+  const [reviewImages, setReviewImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const { data: reviews = [], isLoading } = useQuery({
     queryKey: ["product-reviews", productId],
