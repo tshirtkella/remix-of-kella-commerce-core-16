@@ -15,6 +15,7 @@ import {
   ShoppingBag, Star,
 } from "lucide-react";
 import MyReviews from "@/components/profile/MyReviews";
+import PendingReviewsBanner from "@/components/storefront/PendingReviewsBanner";
 import { useToast } from "@/hooks/use-toast";
 
 interface Profile {
@@ -223,6 +224,9 @@ const Profile = () => {
 
       {/* Content */}
       <div className="max-w-2xl mx-auto px-4 -mt-2 pb-8 space-y-4">
+
+        {/* Pending Reviews Banner */}
+        <PendingReviewsBanner />
 
         {/* My Orders */}
         <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
