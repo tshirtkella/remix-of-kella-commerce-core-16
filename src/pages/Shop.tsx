@@ -1,12 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useSearchParams } from "react-router-dom";
-import { useCurrency } from "@/hooks/useCurrency";
 import StoreHeader from "@/components/storefront/StoreHeader";
 import StoreFooter from "@/components/storefront/StoreFooter";
+import ProductCard from "@/components/storefront/ProductCard";
 
 const Shop = () => {
-  const { format } = useCurrency();
   const [searchParams] = useSearchParams();
   const categorySlug = searchParams.get("category");
   const searchQuery = searchParams.get("search") || "";
@@ -25,7 +24,7 @@ const Shop = () => {
     queryFn: async () => {
       let q = supabase
         .from("products")
-        .select("*, categories(name, slug), variants(price_override, inventory_quantity), images(url, alt_text, position)")
+        .select("*, categories(name, slug), variants(id, is_active, color, size, price_override, inventory_quantity), images(url, alt_text, position)")
         .eq("is_active", true)
         .order("created_at", { ascending: false });
 
@@ -57,6 +56,7 @@ const Shop = () => {
                 ? categories.find((c) => c.slug === categorySlug)?.name ?? "Shop"
                 : "All Products"}
           </h1>
+          <span className="text-sm text-muted-foreground">{products.length} products</span>
         </div>
 
         {/* Category filter pills */}
@@ -83,52 +83,10 @@ const Shop = () => {
         </div>
 
         {/* Product grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {products.map((product) => {
-            const minPrice = product.variants?.length
-              ? Math.min(...product.variants.map((v: any) => v.price_override ?? product.base_price))
-              : product.base_price;
-            const totalStock = product.variants?.reduce((s: number, v: any) => s + v.inventory_quantity, 0) ?? 0;
-
-            return (
-              <Link
-                key={product.id}
-                to={`/product/${product.slug}`}
-                className="group rounded-xl border border-border bg-card overflow-hidden hover:shadow-lg transition-all hover:-translate-y-0.5"
-              >
-                <div className="aspect-square bg-muted/50 flex items-center justify-center relative overflow-hidden">
-                  {product.images?.[0]?.url ? (
-                    <img src={product.images[0].url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                  ) : (
-                    <span className="text-4xl opacity-20">👕</span>
-                  )}
-                  {totalStock === 0 && (
-                    <span className="absolute top-2 left-2 text-[10px] font-bold bg-destructive text-destructive-foreground px-2 py-0.5 rounded">SOLD OUT</span>
-                  )}
-                  {totalStock > 0 && totalStock < 5 && (
-                    <span className="absolute top-2 left-2 text-[10px] font-bold bg-warning text-warning-foreground px-2 py-0.5 rounded">LOW STOCK</span>
-                  )}
-                  {product.discount_percentage > 0 && (
-                    <span className="absolute top-2 right-2 text-[10px] font-bold bg-destructive text-destructive-foreground px-2 py-0.5 rounded">
-                      {product.discount_percentage}% OFF
-                    </span>
-                  )}
-                </div>
-                <div className="p-3">
-                  <p className="text-xs text-muted-foreground">{(product as any).categories?.name || "Uncategorized"}</p>
-                  <h3 className="font-semibold text-sm mt-0.5 group-hover:text-primary transition-colors line-clamp-1">{product.name}</h3>
-                  {product.discount_percentage > 0 ? (
-                    <div className="flex items-center gap-2 mt-1">
-                      <p className="font-bold text-base">{format(Number(minPrice) * (1 - product.discount_percentage / 100))}</p>
-                      <p className="text-xs text-muted-foreground line-through">{format(Number(minPrice))}</p>
-                    </div>
-                  ) : (
-                    <p className="font-bold text-base mt-1">{format(Number(minPrice))}</p>
-                  )}
-                </div>
-              </Link>
-            );
-          })}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+          {products.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
         </div>
 
         {products.length === 0 && (

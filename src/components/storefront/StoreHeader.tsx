@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Shirt, ShoppingBag, User, LogOut, Shield, Search, Menu, X, ChevronDown } from "lucide-react";
+import { Shirt, ShoppingBag, User, Shield, Search, Menu, X, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
