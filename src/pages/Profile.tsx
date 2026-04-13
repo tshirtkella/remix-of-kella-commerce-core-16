@@ -12,9 +12,10 @@ import {
   ArrowLeft, LogOut, Settings, Camera, Loader2, Save,
   Clock, CheckCircle2, Truck, PackageCheck, XCircle,
   MapPin, Headphones, Info, ChevronRight, User, Phone, Edit2,
-  ShoppingBag, Star,
+  ShoppingBag, Star, Heart,
 } from "lucide-react";
 import MyReviews from "@/components/profile/MyReviews";
+import MyWishlist from "@/components/profile/MyWishlist";
 import PendingReviewsBanner from "@/components/storefront/PendingReviewsBanner";
 import { useToast } from "@/hooks/use-toast";
 
@@ -285,6 +286,16 @@ const Profile = () => {
             </h2>
           </div>
           <MyReviews userId={user.id} />
+        </div>
+
+        {/* My Wishlist */}
+        <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-heading font-semibold text-foreground flex items-center gap-2">
+              <Heart className="h-4 w-4" /> My Wishlist
+            </h2>
+          </div>
+          <MyWishlist userId={user.id} />
         </div>
 
         {/* Logout */}
