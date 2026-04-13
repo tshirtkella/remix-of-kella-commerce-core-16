@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
-import { Star, ShoppingCart } from "lucide-react";
+import { Star, ShoppingCart, Heart } from "lucide-react";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useCart } from "@/hooks/useCart";
 import { useToast } from "@/hooks/use-toast";
+import { useWishlist } from "@/hooks/useWishlist";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ProductCardProps {
   product: any;
@@ -13,6 +15,20 @@ const ProductCard = ({ product, compact = false }: ProductCardProps) => {
   const { format } = useCurrency();
   const { addItem } = useCart();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { isWished, toggle } = useWishlist();
+
+  const wished = isWished(product.id);
+
+  const handleWishlist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user) {
+      toast({ title: "Please login first", variant: "destructive" });
+      return;
+    }
+    toggle(product.id);
+  };
 
   const minPrice = product.variants?.length
     ? Math.min(...product.variants.map((v: any) => v.price_override ?? product.base_price))
@@ -86,6 +102,15 @@ const ProductCard = ({ product, compact = false }: ProductCardProps) => {
             </span>
           )}
         </div>
+
+        {/* Wishlist */}
+        <button
+          onClick={handleWishlist}
+          className="absolute top-1.5 right-1.5 h-7 w-7 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-sm hover:scale-110 transition-transform z-10"
+          title={wished ? "Remove from wishlist" : "Add to wishlist"}
+        >
+          <Heart className={`h-3.5 w-3.5 ${wished ? "fill-red-500 text-red-500" : "text-muted-foreground"}`} />
+        </button>
 
         {/* Quick Add to Cart */}
         {totalStock > 0 && (

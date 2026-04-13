@@ -3,12 +3,14 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Star, Edit2, Trash2, Loader2, MessageSquare, ChevronDown, ChevronUp, Bell } from "lucide-react";
+import { Star, Edit2, Loader2, MessageSquare, ChevronDown, ChevronUp, Bell, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Props {
   userId: string;
 }
+
+const EDIT_WINDOW_MS = 30 * 60 * 1000; // 30 minutes
 
 const StarRating = ({ rating }: { rating: number }) => (
   <div className="flex gap-0.5">
@@ -18,6 +20,17 @@ const StarRating = ({ rating }: { rating: number }) => (
   </div>
 );
 
+const canEdit = (createdAt: string) => {
+  return Date.now() - new Date(createdAt).getTime() < EDIT_WINDOW_MS;
+};
+
+const timeLeftLabel = (createdAt: string) => {
+  const ms = EDIT_WINDOW_MS - (Date.now() - new Date(createdAt).getTime());
+  if (ms <= 0) return null;
+  const mins = Math.ceil(ms / 60000);
+  return `${mins}m left to edit`;
+};
+
 const MyReviews = ({ userId }: Props) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -26,6 +39,13 @@ const MyReviews = ({ userId }: Props) => {
   const [editRating, setEditRating] = useState(5);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [unreadReplies, setUnreadReplies] = useState<Set<string>>(new Set());
+  const [, setTick] = useState(0);
+
+  // Re-render every minute to update time-left labels
+  useEffect(() => {
+    const interval = setInterval(() => setTick((t) => t + 1), 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   const { data: reviews = [], isLoading } = useQuery({
     queryKey: ["my-reviews", userId],
@@ -56,7 +76,6 @@ const MyReviews = ({ userId }: Props) => {
     enabled: reviews.length > 0,
   });
 
-  // Realtime subscription for new replies
   useEffect(() => {
     if (reviews.length === 0) return;
     const ids = reviews.map((r) => r.id);
@@ -89,18 +108,6 @@ const MyReviews = ({ userId }: Props) => {
     onError: () => toast({ title: "Failed to update", variant: "destructive" }),
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("product_reviews").delete().eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["my-reviews", userId] });
-      toast({ title: "Review deleted" });
-    },
-    onError: () => toast({ title: "Failed to delete", variant: "destructive" }),
-  });
-
   if (isLoading) {
     return (
       <div className="flex justify-center py-6">
@@ -126,6 +133,8 @@ const MyReviews = ({ userId }: Props) => {
         const isEditing = editingId === r.id;
         const isExpanded = expandedId === r.id;
         const hasUnread = unreadReplies.has(r.id);
+        const editable = canEdit(r.created_at);
+        const timeLeft = timeLeftLabel(r.created_at);
 
         return (
           <div key={r.id} className="border border-border rounded-xl p-4 space-y-2">
@@ -138,27 +147,33 @@ const MyReviews = ({ userId }: Props) => {
                 </p>
               </div>
               <div className="flex items-center gap-1">
-                <button
-                  onClick={() => {
-                    setEditingId(r.id);
-                    setEditComment(r.comment ?? "");
-                    setEditRating(r.rating);
-                  }}
-                  className="p-1.5 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <Edit2 className="h-3.5 w-3.5" />
-                </button>
-                <button
-                  onClick={() => deleteMutation.mutate(r.id)}
-                  className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
+                {editable ? (
+                  <button
+                    onClick={() => {
+                      setEditingId(r.id);
+                      setEditComment(r.comment ?? "");
+                      setEditRating(r.rating);
+                    }}
+                    className="p-1.5 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
+                    title={timeLeft ?? "Edit review"}
+                  >
+                    <Edit2 className="h-3.5 w-3.5" />
+                  </button>
+                ) : (
+                  <span className="p-1.5 text-muted-foreground/40" title="Edit window expired">
+                    <Lock className="h-3.5 w-3.5" />
+                  </span>
+                )}
               </div>
             </div>
 
+            {/* Time left badge */}
+            {editable && timeLeft && (
+              <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">{timeLeft}</span>
+            )}
+
             {/* Rating & Comment */}
-            {isEditing ? (
+            {isEditing && editable ? (
               <div className="space-y-2">
                 <div className="flex gap-1">
                   {[1, 2, 3, 4, 5].map((s) => (
