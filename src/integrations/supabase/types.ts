@@ -207,6 +207,45 @@ export type Database = {
         }
         Relationships: []
       }
+      email_templates: {
+        Row: {
+          body_text: string | null
+          button_text: string | null
+          created_at: string
+          footer_text: string | null
+          heading: string | null
+          id: string
+          is_active: boolean
+          subject: string
+          template_key: string
+          updated_at: string
+        }
+        Insert: {
+          body_text?: string | null
+          button_text?: string | null
+          created_at?: string
+          footer_text?: string | null
+          heading?: string | null
+          id?: string
+          is_active?: boolean
+          subject: string
+          template_key: string
+          updated_at?: string
+        }
+        Update: {
+          body_text?: string | null
+          button_text?: string | null
+          created_at?: string
+          footer_text?: string | null
+          heading?: string | null
+          id?: string
+          is_active?: boolean
+          subject?: string
+          template_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       images: {
         Row: {
           alt_text: string | null
@@ -418,6 +457,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      page_templates: {
+        Row: {
+          content: Json
+          created_at: string
+          id: string
+          is_active: boolean
+          page_key: string
+          section_key: string
+          sort_order: number
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          page_key: string
+          section_key: string
+          sort_order?: number
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          page_key?: string
+          section_key?: string
+          sort_order?: number
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       phone_verifications: {
         Row: {
