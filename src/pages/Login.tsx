@@ -17,6 +17,7 @@ import {
 import { ArrowRight, Eye, EyeOff, Check, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import PhoneVerificationStep from "@/components/auth/PhoneVerificationStep";
+import { usePageSection } from "@/hooks/usePageTemplates";
 import loginHero from "@/assets/login-hero.jpg";
 
 const MONTHS = [
