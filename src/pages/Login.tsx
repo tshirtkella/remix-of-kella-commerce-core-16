@@ -84,6 +84,7 @@ const Login = () => {
   const [birthDay, setBirthDay] = useState("");
   const [birthYear, setBirthYear] = useState("");
   const [gender, setGender] = useState("");
+  const heroContent = usePageSection("login", "hero");
   const { signIn, user, isStaff, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -207,9 +208,9 @@ const Login = () => {
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
           {/* Text on image */}
           <div className="absolute bottom-0 left-0 right-0 p-10 text-white">
-            <p className="text-sm font-medium tracking-widest uppercase text-white/80 mb-2">Step into Style</p>
+            <p className="text-sm font-medium tracking-widest uppercase text-white/80 mb-2">{heroContent?.heading || "Step into Style"}</p>
             <h2 className="text-3xl lg:text-4xl font-bold leading-tight">
-              From everyday essentials to luxury brands, find fashion that fits your world.
+              {heroContent?.subheading || "From everyday essentials to luxury brands, find fashion that fits your world."}
             </h2>
             {/* Dots indicator */}
             <div className="flex gap-2 mt-6">
