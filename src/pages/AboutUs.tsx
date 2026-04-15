@@ -1,12 +1,18 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft, Shirt, Heart, Shield, Truck } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { usePageSection } from "@/hooks/usePageTemplates";
+import { useBranding } from "@/hooks/useBranding";
 
 const AboutUs = () => {
+  const heroContent = usePageSection("about", "hero");
+  const storyContent = usePageSection("about", "story");
+  const branding = useBranding();
+
   const values = [
     { icon: Shirt, title: "Quality First", desc: "We source only the finest fabrics and materials for our t-shirts." },
     { icon: Heart, title: "Customer Love", desc: "Your satisfaction is our top priority. We're always here to help." },
-    { icon: Shield, title: "Trusted Brand", desc: "Thousands of happy customers trust T-Shirt Kella for their style needs." },
+    { icon: Shield, title: "Trusted Brand", desc: "Thousands of happy customers trust us for their style needs." },
     { icon: Truck, title: "Fast Delivery", desc: "Quick and reliable delivery across Bangladesh and beyond." },
   ];
 
@@ -25,10 +31,11 @@ const AboutUs = () => {
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
             <Shirt className="h-8 w-8" />
           </div>
-          <h2 className="text-2xl font-heading font-bold text-foreground">T-Shirt Kella</h2>
+          <h2 className="text-2xl font-heading font-bold text-foreground">
+            {heroContent?.heading || branding.store_name}
+          </h2>
           <p className="text-sm text-muted-foreground leading-relaxed max-w-md mx-auto">
-            Your go-to destination for premium quality t-shirts. We believe everyone deserves
-            to look and feel great, and we're on a mission to make that happen — one t-shirt at a time.
+            {heroContent?.subheading || "Your go-to destination for premium quality t-shirts. We believe everyone deserves to look and feel great, and we're on a mission to make that happen — one t-shirt at a time."}
           </p>
         </div>
 
@@ -50,15 +57,12 @@ const AboutUs = () => {
         {/* Story */}
         <Card className="border border-border">
           <CardContent className="p-5 space-y-3">
-            <h3 className="font-heading font-bold text-foreground">Our Story</h3>
+            <h3 className="font-heading font-bold text-foreground">{storyContent?.heading || "Our Story"}</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Founded with a passion for fashion and quality, T-Shirt Kella started as a small
-              venture with big dreams. Today, we serve thousands of customers who appreciate
-              premium fabrics, unique designs, and unbeatable comfort.
+              {storyContent?.paragraph_1 || "Founded with a passion for fashion and quality, we started as a small venture with big dreams. Today, we serve thousands of customers who appreciate premium fabrics, unique designs, and unbeatable comfort."}
             </p>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Every t-shirt in our collection is carefully curated to ensure it meets our high
-              standards. From casual everyday wear to statement pieces, we have something for everyone.
+              {storyContent?.paragraph_2 || "Every t-shirt in our collection is carefully curated to ensure it meets our high standards. From casual everyday wear to statement pieces, we have something for everyone."}
             </p>
           </CardContent>
         </Card>

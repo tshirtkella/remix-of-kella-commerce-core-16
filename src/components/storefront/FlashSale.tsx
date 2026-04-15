@@ -5,8 +5,10 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { Zap, Star, ShoppingCart } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 import { useToast } from "@/hooks/use-toast";
+import { usePageSection } from "@/hooks/usePageTemplates";
 
 const FlashSale = () => {
+  const content = usePageSection("home", "flash_sale");
   const { format } = useCurrency();
   const { addItem } = useCart();
   const { toast } = useToast();
@@ -55,8 +57,8 @@ const FlashSale = () => {
         <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-destructive/5">
           <div className="flex items-center gap-2">
             <Zap className="h-5 w-5 text-destructive fill-destructive" />
-            <h2 className="text-xl font-bold font-heading">Flash Sale</h2>
-            <span className="text-sm text-destructive font-semibold ml-2 animate-pulse">🔥 On Sale Now</span>
+            <h2 className="text-xl font-bold font-heading">{content?.heading || "Flash Sale"}</h2>
+            <span className="text-sm text-destructive font-semibold ml-2 animate-pulse">{content?.badge || "🔥 On Sale Now"}</span>
           </div>
           <Link
             to="/shop?sale=true"

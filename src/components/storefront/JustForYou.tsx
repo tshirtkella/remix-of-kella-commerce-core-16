@@ -4,10 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ProductCard from "./ProductCard";
+import { usePageSection } from "@/hooks/usePageTemplates";
 
 const PAGE_SIZE = 12;
 
 const JustForYou = () => {
+  const content = usePageSection("home", "just_for_you");
   const [page, setPage] = useState(1);
 
   const { data, isLoading } = useQuery({
@@ -32,7 +34,7 @@ const JustForYou = () => {
 
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h2 className="text-2xl font-bold font-heading mb-6">Just For You</h2>
+      <h2 className="text-2xl font-bold font-heading mb-6">{content?.heading || "Just For You"}</h2>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
         {products.map((product) => (
