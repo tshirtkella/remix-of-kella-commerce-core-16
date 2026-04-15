@@ -4,8 +4,10 @@ import { Link, useSearchParams } from "react-router-dom";
 import StoreHeader from "@/components/storefront/StoreHeader";
 import StoreFooter from "@/components/storefront/StoreFooter";
 import ProductCard from "@/components/storefront/ProductCard";
+import { usePageSection } from "@/hooks/usePageTemplates";
 
 const Shop = () => {
+  const content = usePageSection("shop", "hero");
   const [searchParams] = useSearchParams();
   const categorySlug = searchParams.get("category");
   const searchQuery = searchParams.get("search") || "";
@@ -54,7 +56,7 @@ const Shop = () => {
               ? `Results for "${searchQuery}"`
               : categorySlug
                 ? categories.find((c) => c.slug === categorySlug)?.name ?? "Shop"
-                : "All Products"}
+                : content?.heading || "All Products"}
           </h1>
           <span className="text-sm text-muted-foreground">{products.length} products</span>
         </div>

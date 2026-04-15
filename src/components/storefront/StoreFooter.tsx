@@ -1,9 +1,11 @@
 import { Link } from "react-router-dom";
 import { Shirt, Phone, Mail, MapPin } from "lucide-react";
 import { useBranding } from "@/hooks/useBranding";
+import { usePageSection } from "@/hooks/usePageTemplates";
 
 const StoreFooter = () => {
   const branding = useBranding();
+  const content = usePageSection("footer", "content");
 
   return (
     <footer className="bg-foreground text-background mt-16">
@@ -39,15 +41,15 @@ const StoreFooter = () => {
             <ul className="space-y-3 text-sm opacity-70">
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4 shrink-0" />
-                <span>+880 1XXX-XXXXXX</span>
+                <span>{content?.phone || "+880 1XXX-XXXXXX"}</span>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4 shrink-0" />
-                <span>support@store.com</span>
+                <span>{content?.email || "support@store.com"}</span>
               </li>
               <li className="flex items-start gap-2">
                 <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
-                <span>Dhaka, Bangladesh</span>
+                <span>{content?.address || "Dhaka, Bangladesh"}</span>
               </li>
             </ul>
           </div>

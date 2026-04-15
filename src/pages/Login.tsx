@@ -200,7 +200,7 @@ const Login = () => {
       <div className="hidden lg:block lg:w-[50%] relative">
         <div className="absolute inset-4 rounded-2xl overflow-hidden">
           <img
-            src={loginHero}
+            src={heroContent?.hero_image || loginHero}
             alt="Fashion editorial"
             className="absolute inset-0 w-full h-full object-cover"
           />

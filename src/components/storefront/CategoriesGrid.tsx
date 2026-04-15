@@ -2,8 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { Grid3X3 } from "lucide-react";
+import { usePageSection } from "@/hooks/usePageTemplates";
 
 const CategoriesGrid = () => {
+  const content = usePageSection("home", "categories");
   const { data: categories = [] } = useQuery({
     queryKey: ["store-categories-grid"],
     queryFn: async () => {
@@ -18,9 +20,9 @@ const CategoriesGrid = () => {
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold font-heading">Categories</h2>
+        <h2 className="text-2xl font-bold font-heading">{content?.heading || "Categories"}</h2>
         <Link to="/categories" className="text-sm text-primary font-medium hover:underline flex items-center gap-1">
-          View All <Grid3X3 className="h-4 w-4" />
+          {content?.link_text || "View All"} <Grid3X3 className="h-4 w-4" />
         </Link>
       </div>
       <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-4">
