@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Navigate, Link, useNavigate } from "react-router-dom";
+import { usePageSection } from "@/hooks/usePageTemplates";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -108,6 +109,7 @@ const MyOrders = () => {
   const { user, loading } = useAuth();
   const { format } = useCurrency();
   const navigate = useNavigate();
+  const content = usePageSection("my_orders", "header");
   const [orders, setOrders] = useState<Order[]>([]);
   const [fetching, setFetching] = useState(true);
   const [tab, setTab] = useState("all");
@@ -169,7 +171,7 @@ const MyOrders = () => {
       <div className="bg-card border-b border-border px-4 py-4">
         <div className="max-w-2xl mx-auto flex items-center gap-3">
           <Link to="/profile"><ArrowLeft className="h-5 w-5 text-muted-foreground hover:text-foreground" /></Link>
-          <h1 className="text-lg font-heading font-bold text-foreground">My Orders</h1>
+          <h1 className="text-lg font-heading font-bold text-foreground">{content?.heading || "My Orders"}</h1>
         </div>
       </div>
 
@@ -202,13 +204,13 @@ const MyOrders = () => {
               {tab === "to-review" ? (
                 <>
                   <Star className="h-12 w-12 text-muted-foreground/40 mx-auto" />
-                  <p className="text-muted-foreground">No products to review</p>
-                  <p className="text-xs text-muted-foreground">Reviews become available after your order is delivered</p>
+                   <p className="text-muted-foreground">{content?.empty_review_text || "No products to review"}</p>
+                   <p className="text-xs text-muted-foreground">{content?.review_hint || "Reviews become available after your order is delivered"}</p>
                 </>
               ) : (
                 <>
                   <Package className="h-12 w-12 text-muted-foreground/40 mx-auto" />
-                  <p className="text-muted-foreground">No orders found</p>
+                  <p className="text-muted-foreground">{content?.empty_text || "No orders found"}</p>
                 </>
               )}
             </div>
