@@ -52,6 +52,7 @@ const Login = () => {
   const [fullName, setFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [forgotMode, setForgotMode] = useState(false);
   const [agreedTerms, setAgreedTerms] = useState(false);
   const [birthMonth, setBirthMonth] = useState("");
   const [birthDay, setBirthDay] = useState("");
@@ -69,11 +70,11 @@ const Login = () => {
     navigate(isStaff ? "/admin" : "/", { replace: true });
   }, [loading, user, isStaff, navigate]);
 
-  // Reset signup step when toggling
   useEffect(() => {
     if (!isSignUp) {
       setSignupStep("phone");
       setVerifiedPhone("");
+      setForgotMode(false);
     }
   }, [isSignUp]);
 
@@ -83,14 +84,30 @@ const Login = () => {
     });
     if (result.error) {
       toast({ title: "Error", description: String(result.error), variant: "destructive" });
-      return;
     }
-    if (result.redirected) return;
   };
 
   const handlePhoneVerified = (phone: string) => {
     setVerifiedPhone(phone);
     setSignupStep("details");
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast({ title: "Reset link sent!", description: "Check your email for the password reset link." });
+      setForgotMode(false);
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -101,6 +118,10 @@ const Login = () => {
     }
     if (isSignUp && password.length < 6) {
       toast({ title: "Weak password", description: "Password must be at least 6 characters.", variant: "destructive" });
+      return;
+    }
+    if (isSignUp && !email) {
+      toast({ title: "Email required", description: "Please enter your email address for verification.", variant: "destructive" });
       return;
     }
 
@@ -128,7 +149,7 @@ const Login = () => {
           },
         });
         if (error) throw error;
-        toast({ title: "Account created!", description: "Check your email to confirm your account (optional)." });
+        toast({ title: "Account created!", description: "Please check your email and click the verification link to activate your account." });
       } else {
         await signIn(email, password);
       }
@@ -162,26 +183,15 @@ const Login = () => {
             <Shirt className="h-12 w-12 text-primary-foreground" />
           </div>
           <div className="space-y-4">
-            <h1 className="font-heading text-5xl font-bold text-primary-foreground tracking-tight">
-              T-Shirt Kella
-            </h1>
+            <h1 className="font-heading text-5xl font-bold text-primary-foreground tracking-tight">T-Shirt Kella</h1>
             <p className="text-primary-foreground/80 text-lg leading-relaxed max-w-sm mx-auto">
               Discover the latest trends and shop your favorite styles at the best prices.
             </p>
           </div>
           <div className="flex items-center justify-center gap-8 text-primary-foreground/70 text-sm">
-            <span className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4" />
-              Secure shopping
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-accent" />
-              Free delivery
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-accent" />
-              Easy returns
-            </span>
+            <span className="flex items-center gap-2"><ShieldCheck className="h-4 w-4" />Secure shopping</span>
+            <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-accent" />Free delivery</span>
+            <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-accent" />Easy returns</span>
           </div>
         </div>
       </div>
@@ -201,50 +211,36 @@ const Login = () => {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="font-heading text-2xl font-bold text-foreground">
-                {isSignUp
-                  ? signupStep === "phone"
-                    ? "Verify Your Phone"
-                    : "Create your Account"
-                  : "Welcome back"}
+                {forgotMode
+                  ? "Forgot Password"
+                  : isSignUp
+                    ? signupStep === "phone" ? "Verify Your Phone" : "Create your Account"
+                    : "Welcome back"}
               </h2>
               <p className="text-muted-foreground text-sm mt-1">
-                {isSignUp
-                  ? signupStep === "phone"
-                    ? "Enter your phone number to get started"
-                    : "Complete your registration"
-                  : "Sign in to your account"}
+                {forgotMode
+                  ? "Enter your email to receive a reset link"
+                  : isSignUp
+                    ? signupStep === "phone" ? "Enter your phone number to get started" : "Complete your registration"
+                    : "Sign in to your account"}
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-sm font-medium text-primary hover:underline"
-            >
-              {isSignUp ? "Login" : "Sign Up"}
-            </button>
+            {!forgotMode && (
+              <button type="button" onClick={() => setIsSignUp(!isSignUp)} className="text-sm font-medium text-primary hover:underline">
+                {isSignUp ? "Login" : "Sign Up"}
+              </button>
+            )}
           </div>
 
           {/* Sign Up - Phone Verification Step */}
           {isSignUp && signupStep === "phone" && (
             <>
               <PhoneVerificationStep onVerified={handlePhoneVerified} />
-
               <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-border" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-3 text-muted-foreground">or</span>
-                </div>
+                <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
+                <div className="relative flex justify-center text-xs uppercase"><span className="bg-background px-3 text-muted-foreground">or</span></div>
               </div>
-
-              {/* Google login */}
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full h-12 gap-3 text-sm font-medium border-border hover:bg-muted"
-                onClick={handleGoogleLogin}
-              >
+              <Button type="button" variant="outline" className="w-full h-12 gap-3 text-sm font-medium border-border hover:bg-muted" onClick={handleGoogleLogin}>
                 <svg className="h-5 w-5" viewBox="0 0 24 24">
                   <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
                   <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
@@ -256,7 +252,7 @@ const Login = () => {
             </>
           )}
 
-          {/* Sign Up - Details Step (after phone verified) */}
+          {/* Sign Up - Details Step */}
           {isSignUp && signupStep === "details" && (
             <>
               <div className="bg-accent/10 border border-accent/30 rounded-lg p-3 flex items-center gap-2 text-sm">
@@ -266,33 +262,20 @@ const Login = () => {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-1.5">
-                  <Label htmlFor="fullName" className="text-sm font-medium">
-                    Full Name <span className="text-destructive">*</span>
-                  </Label>
+                  <Label htmlFor="fullName" className="text-sm font-medium">Full Name <span className="text-destructive">*</span></Label>
                   <Input id="fullName" placeholder="Enter your full name" value={fullName} onChange={(e) => setFullName(e.target.value)} required className="h-11" />
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="email" className="text-sm font-medium">
-                    Email Address <span className="text-muted-foreground text-xs">(optional)</span>
-                  </Label>
-                  <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} className="h-11" />
+                  <Label htmlFor="email" className="text-sm font-medium">Email Address <span className="text-destructive">*</span></Label>
+                  <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-11" />
+                  <p className="text-xs text-muted-foreground">You'll need to verify your email to activate your account</p>
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="password" className="text-sm font-medium">
-                    Password <span className="text-destructive">*</span>
-                  </Label>
+                  <Label htmlFor="password" className="text-sm font-medium">Password <span className="text-destructive">*</span></Label>
                   <div className="relative">
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Minimum 6 characters"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      className="h-11 pr-10"
-                    />
+                    <Input id="password" type={showPassword ? "text" : "password"} placeholder="Minimum 6 characters" value={password} onChange={(e) => setPassword(e.target.value)} required className="h-11 pr-10" />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
@@ -374,15 +357,10 @@ const Login = () => {
             </>
           )}
 
-          {/* Login form */}
+          {/* Login / Forgot Password form */}
           {!isSignUp && (
             <>
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full h-12 gap-3 text-sm font-medium border-border hover:bg-muted"
-                onClick={handleGoogleLogin}
-              >
+              <Button type="button" variant="outline" className="w-full h-12 gap-3 text-sm font-medium border-border hover:bg-muted" onClick={handleGoogleLogin}>
                 <svg className="h-5 w-5" viewBox="0 0 24 24">
                   <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
                   <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
@@ -393,29 +371,32 @@ const Login = () => {
               </Button>
 
               <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-border" />
-                </div>
+                <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
                 <div className="relative flex justify-center text-xs uppercase">
                   <span className="bg-background px-3 text-muted-foreground">or login with email</span>
                 </div>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={forgotMode ? handleForgotPassword : handleSubmit} className="space-y-4">
                 <div className="space-y-1.5">
-                  <Label htmlFor="email" className="text-sm font-medium">Email Address <span className="text-destructive">*</span></Label>
-                  <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-11" />
+                  <Label htmlFor="loginEmail" className="text-sm font-medium">Email Address <span className="text-destructive">*</span></Label>
+                  <Input id="loginEmail" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-11" />
                 </div>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="password" className="text-sm font-medium">Password <span className="text-destructive">*</span></Label>
-                  <div className="relative">
-                    <Input id="password" type={showPassword ? "text" : "password"} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required className="h-11 pr-10" />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
+                {!forgotMode && (
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="loginPassword" className="text-sm font-medium">Password <span className="text-destructive">*</span></Label>
+                      <button type="button" onClick={() => setForgotMode(true)} className="text-xs text-primary hover:underline">Forgot password?</button>
+                    </div>
+                    <div className="relative">
+                      <Input id="loginPassword" type={showPassword ? "text" : "password"} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required className="h-11 pr-10" />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <Button type="submit" className="w-full h-12 gap-2 text-sm font-semibold" disabled={submitting}>
                   {submitting ? (
@@ -423,22 +404,32 @@ const Login = () => {
                       <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
                       Processing...
                     </span>
+                  ) : forgotMode ? (
+                    <>Send Reset Link<ArrowRight className="h-4 w-4" /></>
                   ) : (
                     <>LOGIN<ArrowRight className="h-4 w-4" /></>
                   )}
                 </Button>
+
+                {forgotMode && (
+                  <p className="text-center text-sm">
+                    <button type="button" onClick={() => setForgotMode(false)} className="text-primary font-medium hover:underline">Back to Login</button>
+                  </p>
+                )}
               </form>
             </>
           )}
 
           {/* Toggle */}
-          <p className="text-center text-sm text-muted-foreground">
-            {isSignUp ? (
-              <>Already have an account?{" "}<button type="button" onClick={() => setIsSignUp(false)} className="text-primary font-medium hover:underline">Login here</button></>
-            ) : (
-              <>New to T-Shirt Kella?{" "}<button type="button" onClick={() => setIsSignUp(true)} className="text-primary font-medium hover:underline">Sign up now</button></>
-            )}
-          </p>
+          {!forgotMode && (
+            <p className="text-center text-sm text-muted-foreground">
+              {isSignUp ? (
+                <>Already have an account?{" "}<button type="button" onClick={() => setIsSignUp(false)} className="text-primary font-medium hover:underline">Login here</button></>
+              ) : (
+                <>New to T-Shirt Kella?{" "}<button type="button" onClick={() => setIsSignUp(true)} className="text-primary font-medium hover:underline">Sign up now</button></>
+              )}
+            </p>
+          )}
         </div>
       </div>
     </div>
