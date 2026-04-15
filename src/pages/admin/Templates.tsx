@@ -327,7 +327,7 @@ const Templates = () => {
   const openEmailEditor = (t: EmailTemplate) => { setEditingEmail(t); setEmailForm(t); };
 
   const [newFieldKey, setNewFieldKey] = useState("");
-  const [newFieldType, setNewFieldType] = useState<"text" | "image">("text");
+  
   const addFieldToExisting = () => {
     if (newFieldKey.trim() && !pageForm[newFieldKey.trim()]) {
       setPageForm({ ...pageForm, [newFieldKey.trim()]: "" });
