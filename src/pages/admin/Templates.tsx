@@ -332,7 +332,6 @@ const Templates = () => {
     if (newFieldKey.trim() && !pageForm[newFieldKey.trim()]) {
       setPageForm({ ...pageForm, [newFieldKey.trim()]: "" });
       setNewFieldKey("");
-      setNewFieldType("text");
     }
   };
   const removeFieldFromExisting = (key: string) => {
