@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import StoreHeader from "@/components/storefront/StoreHeader";
 import StoreFooter from "@/components/storefront/StoreFooter";
 import { usePageSection } from "@/hooks/usePageTemplates";
-import StoreFooter from "@/components/storefront/StoreFooter";
 
 const categoryColors = ["#EF4444", "#F59E0B", "#10B981", "#3B82F6", "#8B5CF6", "#EC4899"];
 
