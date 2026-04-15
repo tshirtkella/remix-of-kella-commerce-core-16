@@ -52,6 +52,7 @@ const Login = () => {
   const [fullName, setFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [forgotMode, setForgotMode] = useState(false);
   const [agreedTerms, setAgreedTerms] = useState(false);
   const [birthMonth, setBirthMonth] = useState("");
   const [birthDay, setBirthDay] = useState("");
@@ -274,8 +275,10 @@ const Login = () => {
 
                 <div className="space-y-1.5">
                   <Label htmlFor="email" className="text-sm font-medium">
-                    Email Address <span className="text-muted-foreground text-xs">(optional)</span>
+                    Email Address <span className="text-destructive">*</span>
                   </Label>
+                  <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-11" />
+                </div>
                   <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} className="h-11" />
                 </div>
 
@@ -401,21 +404,26 @@ const Login = () => {
                 </div>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={forgotMode ? handleForgotPassword : handleSubmit} className="space-y-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="email" className="text-sm font-medium">Email Address <span className="text-destructive">*</span></Label>
                   <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-11" />
                 </div>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="password" className="text-sm font-medium">Password <span className="text-destructive">*</span></Label>
-                  <div className="relative">
-                    <Input id="password" type={showPassword ? "text" : "password"} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required className="h-11 pr-10" />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
+                {!forgotMode && (
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="password" className="text-sm font-medium">Password <span className="text-destructive">*</span></Label>
+                      <button type="button" onClick={() => setForgotMode(true)} className="text-xs text-primary hover:underline">Forgot password?</button>
+                    </div>
+                    <div className="relative">
+                      <Input id="password" type={showPassword ? "text" : "password"} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required className="h-11 pr-10" />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <Button type="submit" className="w-full h-12 gap-2 text-sm font-semibold" disabled={submitting}>
                   {submitting ? (
@@ -423,10 +431,18 @@ const Login = () => {
                       <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
                       Processing...
                     </span>
+                  ) : forgotMode ? (
+                    <>Send Reset Link<ArrowRight className="h-4 w-4" /></>
                   ) : (
                     <>LOGIN<ArrowRight className="h-4 w-4" /></>
                   )}
                 </Button>
+
+                {forgotMode && (
+                  <p className="text-center text-sm">
+                    <button type="button" onClick={() => setForgotMode(false)} className="text-primary font-medium hover:underline">Back to Login</button>
+                  </p>
+                )}
               </form>
             </>
           )}
