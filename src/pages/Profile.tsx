@@ -18,6 +18,7 @@ import MyReviews from "@/components/profile/MyReviews";
 import MyWishlist from "@/components/profile/MyWishlist";
 import PendingReviewsBanner from "@/components/storefront/PendingReviewsBanner";
 import { useToast } from "@/hooks/use-toast";
+import { usePageSection } from "@/hooks/usePageTemplates";
 
 interface Profile {
   first_name: string | null;
@@ -38,6 +39,7 @@ const Profile = () => {
   const { user, loading, isAdmin, isModerator, isStaff, signOut } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const content = usePageSection("profile", "header");
 
   const [profile, setProfile] = useState<Profile>({ first_name: null, last_name: null, phone: null, avatar_url: null });
   const [profileLoading, setProfileLoading] = useState(true);
@@ -233,7 +235,7 @@ const Profile = () => {
         <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-heading font-semibold text-foreground flex items-center gap-2">
-              <ShoppingBag className="h-4 w-4" /> My Orders
+              <ShoppingBag className="h-4 w-4" /> {content?.orders_title || "My Orders"}
             </h2>
             <Link to="/my-orders" className="text-xs text-primary hover:underline font-medium">
               View All
@@ -258,7 +260,7 @@ const Profile = () => {
 
         {/* Services */}
         <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
-          <h2 className="font-heading font-semibold text-foreground mb-4">Services</h2>
+          <h2 className="font-heading font-semibold text-foreground mb-4">{content?.services_title || "Services"}</h2>
           <div className="space-y-1">
             {menuItems.map((item) => (
               <button
@@ -282,7 +284,7 @@ const Profile = () => {
         <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-heading font-semibold text-foreground flex items-center gap-2">
-              <Star className="h-4 w-4" /> My Reviews
+              <Star className="h-4 w-4" /> {content?.reviews_title || "My Reviews"}
             </h2>
           </div>
           <MyReviews userId={user.id} />
@@ -292,7 +294,7 @@ const Profile = () => {
         <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-heading font-semibold text-foreground flex items-center gap-2">
-              <Heart className="h-4 w-4" /> My Wishlist
+              <Heart className="h-4 w-4" /> {content?.wishlist_title || "My Wishlist"}
             </h2>
           </div>
           <MyWishlist userId={user.id} />

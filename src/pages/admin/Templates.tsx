@@ -46,6 +46,10 @@ const PAGE_LABELS: Record<string, string> = {
   product: "Product Detail",
   checkout: "Checkout",
   support: "Support Page",
+  categories: "Categories Page",
+  profile: "Profile Page",
+  my_orders: "My Orders Page",
+  not_found: "404 Page",
 };
 
 const IMAGE_FIELD_HINTS = ["image", "banner", "logo", "icon", "avatar", "photo", "thumbnail", "bg", "background", "hero_image"];

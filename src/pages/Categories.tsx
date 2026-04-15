@@ -3,10 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import StoreHeader from "@/components/storefront/StoreHeader";
 import StoreFooter from "@/components/storefront/StoreFooter";
+import { usePageSection } from "@/hooks/usePageTemplates";
 
 const categoryColors = ["#EF4444", "#F59E0B", "#10B981", "#3B82F6", "#8B5CF6", "#EC4899"];
 
 const Categories = () => {
+  const content = usePageSection("categories", "hero");
   const { data: categories = [] } = useQuery({
     queryKey: ["all-categories"],
     queryFn: async () => {
@@ -20,7 +22,9 @@ const Categories = () => {
     <div className="min-h-screen bg-background text-foreground">
       <StoreHeader />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <h1 className="text-3xl font-bold font-heading mb-8">All Categories</h1>
+        <h1 className="text-3xl font-bold font-heading mb-2">{content?.heading || "All Categories"}</h1>
+        {content?.subtitle && <p className="text-muted-foreground mb-8">{content.subtitle}</p>}
+        {!content?.subtitle && <div className="mb-8" />}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {categories.map((cat, i) => (
             <Link
