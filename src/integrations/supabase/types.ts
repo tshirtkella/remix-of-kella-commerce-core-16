@@ -419,6 +419,36 @@ export type Database = {
           },
         ]
       }
+      phone_verifications: {
+        Row: {
+          attempts: number | null
+          created_at: string | null
+          expires_at: string
+          id: string
+          otp_code: string
+          phone: string
+          verified: boolean | null
+        }
+        Insert: {
+          attempts?: number | null
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          otp_code: string
+          phone: string
+          verified?: boolean | null
+        }
+        Update: {
+          attempts?: number | null
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          otp_code?: string
+          phone?: string
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
       product_reviews: {
         Row: {
           comment: string | null
@@ -521,6 +551,7 @@ export type Database = {
           id: string
           last_name: string | null
           phone: string | null
+          phone_verified: boolean | null
           updated_at: string
         }
         Insert: {
@@ -530,6 +561,7 @@ export type Database = {
           id: string
           last_name?: string | null
           phone?: string | null
+          phone_verified?: boolean | null
           updated_at?: string
         }
         Update: {
@@ -539,6 +571,7 @@ export type Database = {
           id?: string
           last_name?: string | null
           phone?: string | null
+          phone_verified?: boolean | null
           updated_at?: string
         }
         Relationships: []
