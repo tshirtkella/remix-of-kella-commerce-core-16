@@ -31,6 +31,7 @@ import Support from "./pages/Support";
 import AboutUs from "./pages/AboutUs";
 import UserSettings from "./pages/UserSettings";
 import NotFound from "./pages/NotFound";
+import ResetPassword from "./pages/ResetPassword";
 import ReviewPromptDialog from "./components/storefront/ReviewPromptDialog";
 
 const queryClient = new QueryClient();
@@ -52,6 +53,7 @@ const App = () => (
               <Route path="/product/:slug" element={<ProductDetail />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/my-orders" element={<MyOrders />} />
               <Route path="/shipping-address" element={<ShippingAddress />} />
