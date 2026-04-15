@@ -41,11 +41,11 @@ const StoreFooter = () => {
             <ul className="space-y-3 text-sm opacity-70">
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4 shrink-0" />
-                <span>{content?.phone || "+880 1XXX-XXXXXX"}</span>
+                <span>{content?.contact_phone || content?.phone || "+880 1XXX-XXXXXX"}</span>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4 shrink-0" />
-                <span>{content?.email || "support@store.com"}</span>
+                <span>{content?.contact_email || content?.email || "support@store.com"}</span>
               </li>
               <li className="flex items-start gap-2">
                 <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
