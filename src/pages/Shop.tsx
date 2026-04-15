@@ -13,7 +13,7 @@ import { Filter, X } from "lucide-react";
 
 const Shop = () => {
   const content = usePageSection("shop", "hero");
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const categorySlug = searchParams.get("category");
   const searchQuery = searchParams.get("search") || "";
 
