@@ -40,7 +40,6 @@ const Profile = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const content = usePageSection("profile", "header");
-  const navigate = useNavigate();
 
   const [profile, setProfile] = useState<Profile>({ first_name: null, last_name: null, phone: null, avatar_url: null });
   const [profileLoading, setProfileLoading] = useState(true);
