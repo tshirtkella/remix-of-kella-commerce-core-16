@@ -6,13 +6,15 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { useCart } from "@/hooks/useCart";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Minus, Plus, ChevronLeft, ChevronRight, Loader2, Share2, Heart } from "lucide-react";
+import { Minus, Plus, ChevronLeft, ChevronRight, Loader2, Share2, Heart, Clock, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import StoreHeader from "@/components/storefront/StoreHeader";
 import StoreFooter from "@/components/storefront/StoreFooter";
 import RelatedProducts from "@/components/storefront/RelatedProducts";
 import ProductDeliveryInfo from "@/components/storefront/ProductDeliveryInfo";
 import ProductReviews from "@/components/storefront/ProductReviews";
+import SizeGuideDialog from "@/components/storefront/SizeGuideDialog";
+import FrequentlyBoughtTogether from "@/components/storefront/FrequentlyBoughtTogether";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -25,6 +27,8 @@ const ProductDetail = () => {
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [currentImage, setCurrentImage] = useState(0);
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["product-detail", slug],
@@ -71,7 +75,6 @@ const ProductDetail = () => {
     return [...product.images].sort((a: any, b: any) => a.position - b.position);
   }, [product]);
 
-  // Auto-select first color
   if (colors.length > 0 && !selectedColor) {
     setSelectedColor(colors[0] as string);
   }
@@ -114,6 +117,13 @@ const ProductDetail = () => {
     }
   };
 
+  const handleImageMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setZoomPos({ x, y });
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -138,6 +148,10 @@ const ProductDetail = () => {
     );
   }
 
+  // Urgency helpers
+  const totalStock = product.variants?.reduce((s: number, v: any) => s + (v as any).inventory_quantity, 0) ?? 0;
+  const deliveryHours = new Date().getHours() < 14 ? "today" : "tomorrow";
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <StoreHeader />
@@ -160,23 +174,32 @@ const ProductDetail = () => {
           <span className="text-foreground truncate max-w-[200px]">{product.name}</span>
         </nav>
 
-        {/* 3-column: Images | Info | Delivery */}
+        {/* 3-column */}
         <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr_280px] gap-6">
-          {/* Column 1: Image Gallery */}
+          {/* Column 1: Image Gallery with Zoom */}
           <div className="space-y-3">
-            <div className="relative aspect-square rounded-lg overflow-hidden bg-muted/30 border border-border">
+            <div
+              className="relative aspect-square rounded-lg overflow-hidden bg-muted/30 border border-border cursor-crosshair"
+              onMouseEnter={() => setIsZoomed(true)}
+              onMouseLeave={() => setIsZoomed(false)}
+              onMouseMove={handleImageMouseMove}
+            >
               {images.length > 0 ? (
                 <img
                   src={(images[currentImage] as any).url}
                   alt={(images[currentImage] as any).alt_text || product.name}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-transform duration-200"
+                  style={isZoomed ? {
+                    transform: "scale(2.5)",
+                    transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+                  } : undefined}
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   <span className="text-8xl opacity-10">👕</span>
                 </div>
               )}
-              {images.length > 1 && (
+              {images.length > 1 && !isZoomed && (
                 <>
                   <button
                     onClick={() => setCurrentImage((p) => (p - 1 + images.length) % images.length)}
@@ -191,6 +214,12 @@ const ProductDetail = () => {
                     <ChevronRight className="h-4 w-4" />
                   </button>
                 </>
+              )}
+              {/* Image counter */}
+              {images.length > 1 && (
+                <span className="absolute bottom-2 left-2 text-[10px] bg-background/70 backdrop-blur-sm px-2 py-0.5 rounded text-foreground">
+                  {currentImage + 1} / {images.length}
+                </span>
               )}
             </div>
             {/* Thumbnails */}
@@ -215,13 +244,11 @@ const ProductDetail = () => {
           <div className="space-y-4">
             <h1 className="text-xl sm:text-2xl font-heading font-bold leading-tight">{product.name}</h1>
 
-            {/* Share & Wishlist */}
             <div className="flex items-center gap-3">
               <button className="text-muted-foreground hover:text-foreground transition"><Share2 className="h-5 w-5" /></button>
               <button className="text-muted-foreground hover:text-destructive transition"><Heart className="h-5 w-5" /></button>
             </div>
 
-            {/* Brand / Category */}
             {(product as any).categories && (
               <p className="text-sm text-muted-foreground">
                 Brand: <Link to={`/shop?category=${(product as any).categories.slug}`} className="text-primary hover:underline">{(product as any).categories.name}</Link>
@@ -240,6 +267,18 @@ const ProductDetail = () => {
             ) : (
               <p className="text-3xl font-bold text-primary">{format(Number(displayPrice))}</p>
             )}
+
+            {/* Scarcity/Urgency */}
+            {totalStock > 0 && totalStock <= 10 && (
+              <div className="flex items-center gap-2 text-sm bg-amber-500/10 text-amber-700 dark:text-amber-400 px-3 py-2 rounded-lg border border-amber-500/20">
+                <AlertTriangle className="h-4 w-4 shrink-0" />
+                <span className="font-medium">Only {totalStock} left in stock — order soon!</span>
+              </div>
+            )}
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Clock className="h-3.5 w-3.5" />
+              <span>Order within <span className="font-semibold text-foreground">2 hours</span> for delivery {deliveryHours}</span>
+            </div>
 
             {product.description && (
               <p className="text-sm text-muted-foreground leading-relaxed">{product.description}</p>
@@ -267,10 +306,13 @@ const ProductDetail = () => {
               </div>
             )}
 
-            {/* Size Selector */}
+            {/* Size Selector + Size Guide */}
             {sizes.length > 0 && (
               <div>
-                <p className="text-sm font-medium mb-2">Size</p>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-medium">Size</p>
+                  <SizeGuideDialog />
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {sizes.map((size) => {
                     const variant = product.variants?.find(
@@ -296,7 +338,7 @@ const ProductDetail = () => {
                   })}
                 </div>
                 {stock !== null && stock > 0 && stock < 5 && (
-                  <Badge className="mt-2 bg-warning/10 text-warning border-0 text-xs">Only {stock} left</Badge>
+                  <Badge className="mt-2 bg-amber-500/10 text-amber-600 border-0 text-xs">Only {stock} left</Badge>
                 )}
                 {stock === 0 && (
                   <Badge className="mt-2 bg-destructive/10 text-destructive border-0 text-xs">Out of stock</Badge>
@@ -308,10 +350,7 @@ const ProductDetail = () => {
             <div>
               <p className="text-sm font-medium mb-2">Quantity</p>
               <div className="inline-flex items-center border border-border rounded">
-                <button
-                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                  className="h-10 w-10 flex items-center justify-center hover:bg-muted/50 transition"
-                >
+                <button onClick={() => setQuantity((q) => Math.max(1, q - 1))} className="h-10 w-10 flex items-center justify-center hover:bg-muted/50 transition">
                   <Minus className="h-4 w-4" />
                 </button>
                 <span className="w-12 text-center font-medium text-sm border-x border-border">{quantity}</span>
@@ -349,6 +388,9 @@ const ProductDetail = () => {
         <div className="lg:hidden mt-6">
           <ProductDeliveryInfo />
         </div>
+
+        {/* Frequently Bought Together */}
+        <FrequentlyBoughtTogether categoryId={product.category_id} currentProductId={product.id} />
 
         {/* Reviews Section */}
         <ProductReviews productId={product.id} productName={product.name} />
