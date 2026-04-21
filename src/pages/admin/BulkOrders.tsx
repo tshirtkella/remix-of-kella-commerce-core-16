@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Mail, Phone, Package, Trash2, Eye } from "lucide-react";
+import { Loader2, Mail, Phone, Package, Trash2, Eye, Download, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
@@ -21,6 +22,8 @@ const BulkOrders = () => {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [selected, setSelected] = useState<any | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [search, setSearch] = useState("");
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ["admin-bulk-orders"],
@@ -48,34 +51,111 @@ const BulkOrders = () => {
     setSelected(null);
   };
 
+  const filtered = orders.filter((o: any) => {
+    if (statusFilter !== "all" && o.status !== statusFilter) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      return (
+        o.full_name?.toLowerCase().includes(q) ||
+        o.email?.toLowerCase().includes(q) ||
+        o.contact_number?.toLowerCase().includes(q) ||
+        o.product_name?.toLowerCase().includes(q)
+      );
+    }
+    return true;
+  });
+
+  const exportCSV = () => {
+    if (filtered.length === 0) {
+      toast({ title: "Nothing to export", variant: "destructive" });
+      return;
+    }
+    const headers = [
+      "Submitted", "Status", "Name", "Email", "Contact", "Product", "Quantity",
+      "Categories", "Custom Print", "Print Details", "Custom Tag", "Tag Details",
+      "Purpose", "Purpose (Other)", "Notes",
+    ];
+    const esc = (v: any) => {
+      const s = v == null ? "" : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const rows = filtered.map((o: any) => [
+      format(new Date(o.created_at), "yyyy-MM-dd HH:mm"),
+      o.status, o.full_name, o.email, o.contact_number,
+      o.product_name || "", o.quantity_range,
+      (o.product_categories || []).join("; "),
+      o.custom_print ? "Yes" : "No", o.custom_print_details || "",
+      o.custom_tag ? "Yes" : "No", o.custom_tag_details || "",
+      o.order_purpose, o.order_purpose_other || "", o.additional_notes || "",
+    ].map(esc).join(","));
+    const csv = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([`\ufeff${csv}`], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `bulk-orders-${format(new Date(), "yyyy-MM-dd")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: `Exported ${filtered.length} request(s)` });
+  };
+
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Bulk Order Requests</h1>
-        <p className="text-sm text-muted-foreground">Customers who want to place wholesale or custom bulk orders.</p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold">Bulk Order Requests</h1>
+          <p className="text-sm text-muted-foreground">Customers who want to place wholesale or custom bulk orders.</p>
+        </div>
+        <Button onClick={exportCSV} variant="outline" className="gap-2">
+          <Download className="h-4 w-4" /> Export CSV
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <button
+          onClick={() => setStatusFilter("all")}
+          className={`text-left rounded-lg border p-4 transition-colors ${statusFilter === "all" ? "border-primary bg-primary/5" : "hover:bg-muted/30"}`}
+        >
+          <div className="text-xs text-muted-foreground">All</div>
+          <div className="text-2xl font-bold">{orders.length}</div>
+        </button>
         {["new", "contacted", "completed", "cancelled"].map((s) => (
-          <Card key={s}>
-            <CardContent className="p-4">
-              <div className="text-xs text-muted-foreground capitalize">{s}</div>
-              <div className="text-2xl font-bold">{orders.filter((o: any) => o.status === s).length}</div>
-            </CardContent>
-          </Card>
+          <button
+            key={s}
+            onClick={() => setStatusFilter(s)}
+            className={`text-left rounded-lg border p-4 transition-colors ${statusFilter === s ? "border-primary bg-primary/5" : "hover:bg-muted/30"}`}
+          >
+            <div className="text-xs text-muted-foreground capitalize">{s}</div>
+            <div className="text-2xl font-bold">{orders.filter((o: any) => o.status === s).length}</div>
+          </button>
         ))}
       </div>
 
       <Card>
-        <CardHeader><CardTitle>All Requests ({orders.length})</CardTitle></CardHeader>
+        <CardHeader className="flex-row items-center justify-between gap-4 space-y-0">
+          <CardTitle className="text-base">
+            {statusFilter === "all" ? "All Requests" : `${statusFilter[0].toUpperCase()}${statusFilter.slice(1)} Requests`} ({filtered.length})
+          </CardTitle>
+          <div className="relative w-64 max-w-full">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search name, email, phone…"
+              className="pl-8 h-9"
+            />
+          </div>
+        </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="py-8 flex justify-center"><Loader2 className="h-6 w-6 animate-spin" /></div>
-          ) : orders.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">No bulk order requests yet.</p>
+          ) : filtered.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">
+              {orders.length === 0 ? "No bulk order requests yet." : "No requests match this filter."}
+            </p>
           ) : (
             <div className="space-y-2">
-              {orders.map((o: any) => (
+              {filtered.map((o: any) => (
                 <div key={o.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/30">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
