@@ -666,9 +666,14 @@ const Checkout = () => {
             <Button
               className="w-full h-12 font-semibold text-base"
               onClick={handlePlaceOrder}
-              disabled={isSubmitting}
+              disabled={isSubmitting || redirecting}
             >
-              {isSubmitting ? (
+              {redirecting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Securing your payment…
+                </>
+              ) : isSubmitting ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : paymentMethod === "cod" ? (
                 "Place Order"
