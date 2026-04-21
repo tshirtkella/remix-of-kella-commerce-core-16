@@ -143,6 +143,7 @@ const ShareButton = ({
   const handleNetworkClick = (e: React.MouseEvent, net: typeof networks[number]) => {
     e.preventDefault();
     e.stopPropagation();
+    trackShare(net.name.toLowerCase(), "click");
     if (net.name === "Messenger" && /Mobi|Android|iPhone/i.test(navigator.userAgent)) {
       window.location.href = net.url;
       setTimeout(() => {
