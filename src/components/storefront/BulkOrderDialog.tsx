@@ -9,7 +9,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface Props {
   open: boolean;
@@ -47,6 +48,7 @@ const BulkOrderDialog = ({ open, onOpenChange, productId, productName }: Props) 
   const { toast } = useToast();
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
@@ -66,6 +68,7 @@ const BulkOrderDialog = ({ open, onOpenChange, productId, productName }: Props) 
     setCategories([]); setCustomPrint("no"); setPrintDetails("");
     setCustomTag("no"); setTagDetails(""); setPurpose(""); setPurposeOther(""); setNotes("");
     setSubmitted(false);
+    setSubmitError(null);
   };
 
   const toggleCategory = (cat: string) => {
@@ -74,6 +77,7 @@ const BulkOrderDialog = ({ open, onOpenChange, productId, productName }: Props) 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitError(null);
     const payload = {
       email, full_name: fullName, contact_number: contact,
       quantity_range: quantity, product_categories: categories,
@@ -85,31 +89,44 @@ const BulkOrderDialog = ({ open, onOpenChange, productId, productName }: Props) 
     const parsed = schema.safeParse(payload);
     if (!parsed.success) {
       const first = parsed.error.errors[0];
+      setSubmitError(first.message);
       toast({ title: first.message, variant: "destructive" });
       return;
     }
     setSubmitting(true);
-    const { error } = await (supabase.from("bulk_orders") as any).insert({
-      ...parsed.data,
-      product_id: productId ?? null,
-      product_name: productName ?? null,
-    });
+    try {
+      const { error } = await (supabase.from("bulk_orders") as any).insert({
+        ...parsed.data,
+        product_id: productId ?? null,
+        product_name: productName ?? null,
+      });
 
-    if (error) {
-      console.error(error);
-      toast({ title: "Submission failed", description: error.message, variant: "destructive" });
+      if (error) {
+        console.error(error);
+        const msg = error.message || "Could not submit your request. Please try again.";
+        setSubmitError(msg);
+        toast({ title: "Submission failed", description: msg, variant: "destructive" });
+        setSubmitting(false);
+        return;
+      }
+
+      // Fire email notification (non-blocking) — admin lookup happens server-side
+      supabase.functions.invoke("notify-bulk-order", {
+        body: { email: parsed.data.email, full_name: parsed.data.full_name },
+      }).catch((err) => {
+        console.warn("Email notify failed (non-blocking):", err);
+      });
+
       setSubmitting(false);
-      return;
+      setSubmitted(true);
+      toast({ title: "Bulk order request submitted!", description: "We'll contact you within 24 hours." });
+    } catch (err: any) {
+      console.error(err);
+      const msg = err?.message || "Network error. Please check your connection and retry.";
+      setSubmitError(msg);
+      toast({ title: "Submission failed", description: msg, variant: "destructive" });
+      setSubmitting(false);
     }
-
-    // Fire email notification (non-blocking) — admin lookup happens server-side
-    supabase.functions.invoke("notify-bulk-order", { body: { email: parsed.data.email, full_name: parsed.data.full_name } }).catch((err) => {
-      console.warn("Email notify failed (non-blocking):", err);
-    });
-
-    setSubmitting(false);
-    setSubmitted(true);
-    toast({ title: "Bulk order request submitted!", description: "We'll contact you within 24 hours." });
   };
 
   const handleClose = (val: boolean) => {
@@ -142,6 +159,14 @@ const BulkOrderDialog = ({ open, onOpenChange, productId, productName }: Props) 
                   <span className="text-muted-foreground">Inquiry for: </span>
                   <span className="font-semibold">{productName}</span>
                 </div>
+              )}
+
+              {submitError && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Submission failed</AlertTitle>
+                  <AlertDescription className="break-words">{submitError}</AlertDescription>
+                </Alert>
               )}
 
               <div className="grid sm:grid-cols-2 gap-4">
