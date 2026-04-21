@@ -193,18 +193,29 @@ const ProductDeliveryInfo = () => {
               </div>
             )}
 
-            {/* Manual entry — works for guests too */}
-            <div className="space-y-3">
+            {/* Popular cities — quick picker */}
+            <div className="space-y-2">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                {user ? "Or Enter Manually" : "Enter Your Location"}
+                {user && addresses.length > 0 ? "Or Pick a City" : "Popular Cities"}
               </p>
-              <div className="space-y-1.5">
-                <Label htmlFor="city" className="text-xs">City</Label>
-                <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="e.g. Dhaka" />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="country" className="text-xs">Country</Label>
-                <Input id="country" value={country} onChange={(e) => setCountry(e.target.value)} placeholder="e.g. Bangladesh" />
+              <div className="grid grid-cols-2 gap-1.5">
+                {POPULAR_CITIES.map((c) => {
+                  const active = location.city === c.city && location.country === c.country;
+                  return (
+                    <button
+                      key={c.city}
+                      type="button"
+                      onClick={() => pickCity(c)}
+                      className={`text-left px-3 py-2 rounded-lg border text-sm transition-colors ${
+                        active
+                          ? "border-primary bg-primary/5 text-primary font-medium"
+                          : "border-border hover:border-primary hover:bg-primary/5"
+                      }`}
+                    >
+                      {c.city}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -221,11 +232,6 @@ const ProductDeliveryInfo = () => {
               </p>
             )}
           </div>
-
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button onClick={saveManual}>Save</Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
