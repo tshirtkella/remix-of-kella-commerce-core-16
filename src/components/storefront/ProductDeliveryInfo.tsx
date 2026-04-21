@@ -76,11 +76,6 @@ const ProductDeliveryInfo = () => {
     return () => { cancelled = true; };
   }, [open, user]);
 
-  useEffect(() => {
-    setCity(location.city);
-    setCountry(location.country);
-  }, [location, open]);
-
   const persist = (next: { city: string; country: string }) => {
     setLocation(next);
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch {}
@@ -92,13 +87,9 @@ const ProductDeliveryInfo = () => {
     setOpen(false);
   };
 
-  const saveManual = () => {
-    if (!city.trim()) {
-      toast({ title: "Please enter a city", variant: "destructive" });
-      return;
-    }
-    persist({ city: city.trim(), country: country.trim() || "Bangladesh" });
-    toast({ title: "Delivery location updated" });
+  const pickCity = (c: { city: string; country: string }) => {
+    persist(c);
+    toast({ title: "Delivery location updated", description: `${c.city}, ${c.country}` });
     setOpen(false);
   };
 
