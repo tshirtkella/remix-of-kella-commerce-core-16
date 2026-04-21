@@ -1,63 +1,53 @@
 
 
-## Goal
-Strengthen validation on the **Bulk Order Form** so users cannot submit fake/invalid information. Apply Bangladeshi phone format, strict email format, and stricter rules for names, quantities, categories, custom-print/tag details, and purpose.
+## Issues Found
 
-## Validation Rules
+I audited dropdowns, navigation, and key actions across the site. Here are the real bugs:
 
-**Phone (Bangladeshi)**
-- Accepted formats: `01XXXXXXXXX` (11 digits) or `+8801XXXXXXXXX` / `008801XXXXXXXXX`
-- Operator prefix must be valid: `013`–`019` (i.e., second digit 3–9)
-- Regex: `/^(?:\+?880|0)1[3-9]\d{8}$/`
-- Auto-strip spaces/dashes before validation; show example "01XXXXXXXXX or +8801XXXXXXXXX"
+### 1. "Shop by Category" mega menu — broken on touch & mobile
+`src/components/storefront/StoreHeader.tsx` lines 253-310
+- Uses **hover-only** triggers (`onMouseEnter`/`onMouseLeave`) → does not open on tap (touch devices, simulated mobile, trackpads without hover).
+- The whole nav bar is hidden under `md:block` so on small screens there's no way at all to reach the mega menu.
 
-**Email**
-- Strict RFC-ish regex (not just zod's loose check): `/^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/`
-- Lowercase + trim
-- Block obvious throwaway/typo domains: `test.com`, `example.com`, `mailinator.com`, `tempmail`, `10minutemail`, plus reject if domain has no dot or TLD < 2 chars
+### 2. Checkout — "change delivery address" missing for logged-in users
+`src/pages/Checkout.tsx`
+- Logged-in users have saved addresses in `shipping_addresses`, but the Checkout form never loads them. Every checkout forces re-typing name/address/city/phone — no picker, no "Use saved address", no edit/change link.
 
-**Full name**
-- Min 3 chars, max 60
-- Letters/spaces/`.`/`'`/`-` only (supports Bangla unicode range too): `/^[\p{L}\s.'-]{3,60}$/u`
-- Reject if all same character (e.g. "aaaa") or contains digits
+### 3. Search & profile dropdowns — minor click-out gap
+`StoreHeader.tsx` search suggestions: closes on outside-click via `mousedown`, but on iOS Safari `mousedown` doesn't always fire from touchend on links. Low impact, will harden alongside #1.
 
-**Quantity range** — must be one of the 5 predefined options (already enforced).
+### 4. (Cosmetic) MyOrders ref warning in console
+`src/pages/MyOrders.tsx` — non-blocking React dev warning ("Function components cannot be given refs"). Will silence by wrapping the offending icon in a `<span>` so the parent's ref doesn't reach the lucide component.
 
-**Product categories** — at least 1 required; if "Other (Custom)" selected, additional notes must be ≥10 chars.
+Other items checked and working:
+- Cart drawer open/close ✔
+- Profile → Shipping Address navigation ✔ (route exists, dialog opens, save/edit/delete/default work)
+- Add/Edit shipping address dialog ✔
+- Categories grid → /shop?category= ✔
+- Mobile hamburger menu ✔
+- Login / sign-up links ✔
 
-**Custom print / tag**
-- If "Yes" selected → details textarea becomes required, min 10 chars, max 500.
+## Fix Plan
 
-**Purpose**
-- One of 4 options required.
-- If "Other" → `purpose_other` required, min 5 chars, max 200.
+### A. `src/components/storefront/StoreHeader.tsx`
+- Convert mega-menu trigger into a **click + hover** dropdown:
+  - Wrap in a ref'd container; track `showCategories` via both hover (desktop) and click (touch).
+  - Add `onClick` toggle on the button; add outside-click listener (mousedown + touchstart) to close.
+  - Add `aria-expanded` / `aria-haspopup` for accessibility.
+  - Add `onMouseLeave` with a short delay (150 ms) so users can move the cursor into the panel without it snapping shut.
+- Tighten search-suggestions outside-close to also listen for `touchstart`.
 
-**Additional notes** — optional, max 1000 chars.
+### B. `src/pages/Checkout.tsx`
+- For logged-in users, fetch `shipping_addresses` for `user.id`.
+- Render an **"Use a saved address"** picker above the manual fields (radio cards + "Add new"). Selecting one prefills `firstName`, `lastName`, `address`, `city`, `zip`, `country`, `phone`.
+- Keep manual edit fields visible so they can override per-order.
+- Add a small "Manage addresses" link → `/shipping-address`.
+- If no saved addresses, show nothing extra (current behavior preserved).
 
-**Anti-spam**
-- Honeypot hidden field `website` — if filled, silently reject.
-- Min form fill time: reject submissions completed in < 3 seconds (timestamp captured on dialog open).
+### C. `src/pages/MyOrders.tsx`
+- Wrap the ArrowLeft inside `<Link to="/profile">` with a `<span>` (or convert link to `<button onClick={() => navigate(-1)}>`) so React doesn't try to forward a ref to the lucide function component. Removes the dev warning.
 
-## UX Changes
-- Inline field-level error messages (red text under each input) instead of only a top alert + toast.
-- Phone input gets `inputMode="tel"` and a placeholder `01XXXXXXXXX`.
-- Email input lowercases on blur.
-- Submit button stays disabled until required fields pass basic shape checks.
-- Top-level Alert kept for server/network errors only.
-
-## Files to Edit
-- `src/components/storefront/BulkOrderDialog.tsx`
-  - Replace the single zod schema with a stricter schema using the regexes above.
-  - Track per-field errors in a `Record<string, string>` state; clear on change.
-  - Add honeypot input + open-timestamp ref.
-  - Render inline errors beneath each control.
-  - Normalize phone (strip non-digits except leading `+`) and email (trim+lowercase) before validation.
-
-## Backend
-- No schema changes needed — `bulk_orders` columns already accept these fields.
-- Optional hardening (defer unless requested): add a Postgres CHECK constraint or trigger validating phone regex and email format server-side. **Skipping** for this iteration since RLS already gates writes and validation lives client-side; can add later if spam appears.
-
-## Out of Scope
-- OTP phone verification before submit (heavier flow; ask separately if wanted).
-- CAPTCHA integration.
+### Out of scope (ask if wanted)
+- Replacing the custom mega menu with shadcn `NavigationMenu` (bigger refactor).
+- Redesigning the checkout into multi-step layout.
 
