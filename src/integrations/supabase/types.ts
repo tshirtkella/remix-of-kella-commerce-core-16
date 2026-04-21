@@ -805,6 +805,53 @@ export type Database = {
           },
         ]
       }
+      share_events: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          network: string
+          product_id: string | null
+          product_name: string | null
+          product_slug: string | null
+          url: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action?: string
+          created_at?: string
+          id?: string
+          network: string
+          product_id?: string | null
+          product_name?: string | null
+          product_slug?: string | null
+          url?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          network?: string
+          product_id?: string | null
+          product_name?: string | null
+          product_slug?: string | null
+          url?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "share_events_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shipping_addresses: {
         Row: {
           address_line1: string
