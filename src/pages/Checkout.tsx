@@ -50,6 +50,23 @@ const Checkout = () => {
   const [acceptedPolicies, setAcceptedPolicies] = useState(false);
   const [attempted, setAttempted] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [selectedAddressId, setSelectedAddressId] = useState<string>("");
+
+  // Fetch saved addresses for logged-in users
+  const { data: savedAddresses = [] } = useQuery({
+    queryKey: ["checkout-saved-addresses", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data } = await supabase
+        .from("shipping_addresses")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("is_default", { ascending: false })
+        .order("created_at", { ascending: false });
+      return data || [];
+    },
+    enabled: !!user,
+  });
 
   // Draft order tracking
   const [sessionId] = useState<string>(() => {
