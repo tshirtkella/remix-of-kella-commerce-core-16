@@ -662,33 +662,6 @@ const Checkout = () => {
               </Label>
             </div>
 
-            {/* Pay Now button */}
-            <Button
-              className="w-full h-12 font-semibold text-base"
-              onClick={handlePlaceOrder}
-              disabled={isSubmitting || redirecting}
-            >
-              {redirecting ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Securing your payment…
-                </>
-              ) : isSubmitting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : paymentMethod === "cod" ? (
-                "Place Order"
-              ) : (
-                <>
-                  <Lock className="h-4 w-4" />
-                  Pay now
-                </>
-              )}
-            </Button>
-            <p className="text-[11px] text-muted-foreground text-center -mt-2 flex items-center justify-center gap-1.5">
-              <ShieldCheck className="h-3 w-3 text-success" />
-              Your payment info is encrypted and never stored.
-            </p>
-
             {/* Footer links */}
             <div className="flex flex-wrap gap-4 text-xs text-muted-foreground pt-2 pb-8">
               <Link to="/refund-policy" className="underline hover:text-foreground">Refund policy</Link>
@@ -810,10 +783,37 @@ const Checkout = () => {
 
               <Separator />
 
-              <div className="flex justify-between items-baseline font-bold text-lg pb-4">
+              <div className="flex justify-between items-baseline font-bold text-lg pb-2">
                 <span>Total</span>
                 <span>{format(grandTotal)}</span>
               </div>
+
+              {/* Pay Now button */}
+              <Button
+                className="w-full h-12 font-semibold text-base"
+                onClick={handlePlaceOrder}
+                disabled={isSubmitting || redirecting}
+              >
+                {redirecting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Securing your payment…
+                  </>
+                ) : isSubmitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : paymentMethod === "cod" ? (
+                  "Place Order"
+                ) : (
+                  <>
+                    <Lock className="h-4 w-4" />
+                    Pay now
+                  </>
+                )}
+              </Button>
+              <p className="text-[11px] text-muted-foreground text-center flex items-center justify-center gap-1.5 pb-4">
+                <ShieldCheck className="h-3 w-3 text-success" />
+                Your payment info is encrypted and never stored.
+              </p>
             </div>
           </div>
         </div>
