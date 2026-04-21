@@ -141,7 +141,7 @@ const MyOrders = () => {
     void fetchReviewed();
   }, [user?.id]);
 
-  if (loading) return <div className="flex items-center justify-center min-h-screen bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  if (loading && !user) return <div className="flex items-center justify-center min-h-screen bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   if (!user) return <Navigate to="/login" replace />;
 
   // "To Review" = delivered orders with items not yet reviewed

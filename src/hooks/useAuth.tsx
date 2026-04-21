@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext } from "react";
+import { useState, useEffect, useRef, createContext, useContext } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
@@ -24,6 +24,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isModerator, setIsModerator] = useState(false);
 
+  // Track previous user id to detect actual identity changes (vs token refresh / metadata update)
+  const prevUserIdRef = useRef<string | null>(null);
+
   const isStaff = isAdmin || isModerator;
   const loading = !authReady || rolesLoading;
 
@@ -33,14 +36,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const applySession = (nextSession: Session | null) => {
       if (!isMounted) return;
       const nextUser = nextSession?.user ?? null;
+      const nextUserId = nextUser?.id ?? null;
+      const prevUserId = prevUserIdRef.current;
+      const userChanged = nextUserId !== prevUserId;
+
       setSession(nextSession);
       setUser(nextUser);
-      setRolesLoading(Boolean(nextUser));
+
+      // Only flip rolesLoading when the actual user identity changes.
+      // Token refresh / metadata updates keep the same id → don't reset.
+      if (userChanged) {
+        prevUserIdRef.current = nextUserId;
+        setRolesLoading(Boolean(nextUser));
+        if (!nextUser) {
+          setIsAdmin(false);
+          setIsModerator(false);
+        }
+      }
+
       setAuthReady(true);
     };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, nextSession) => {
-      if (event === "INITIAL_SESSION") return;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       applySession(nextSession);
     });
 
@@ -52,6 +69,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (!isMounted) return;
         setSession(null);
         setUser(null);
+        prevUserIdRef.current = null;
         setRolesLoading(false);
         setAuthReady(true);
       });
@@ -64,6 +82,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     let isMounted = true;
+    let safetyTimer: ReturnType<typeof setTimeout> | null = null;
 
     const loadRoles = async () => {
       if (!authReady) return;
@@ -76,7 +95,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
 
-      setRolesLoading(true);
+      // Safety: if the network query stalls, don't block the UI forever.
+      safetyTimer = setTimeout(() => {
+        if (!isMounted) return;
+        console.warn("[useAuth] roles fetch timed out — defaulting to non-staff");
+        setRolesLoading(false);
+      }, 5000);
 
       try {
         const { data, error } = await supabase
@@ -91,11 +115,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const roles = (data ?? []).map((r) => r.role);
         setIsAdmin(roles.includes("admin"));
         setIsModerator(roles.includes("moderator"));
-      } catch {
+      } catch (err) {
+        console.warn("[useAuth] roles fetch failed:", err);
         if (!isMounted) return;
         setIsAdmin(false);
         setIsModerator(false);
       } finally {
+        if (safetyTimer) clearTimeout(safetyTimer);
         if (isMounted) setRolesLoading(false);
       }
     };
@@ -104,6 +130,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     return () => {
       isMounted = false;
+      if (safetyTimer) clearTimeout(safetyTimer);
     };
   }, [authReady, user?.id]);
 
