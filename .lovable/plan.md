@@ -1,46 +1,56 @@
 
 
-## Root Cause: White Screen on Profile / MyOrders / etc.
+## Goal
+Redesign the **Payment** section on `/checkout` to look professional and trustworthy — proper logos, clear hierarchy, secure-payment badge, and consistent card styling. No backend / logic changes.
 
-The auth hook (`src/hooks/useAuth.tsx`) gets stuck in `loading: true` after Supabase fires post-mount auth events (e.g. `TOKEN_REFRESHED`, `SIGNED_IN`, `USER_UPDATED`).
+## What changes (visual only)
 
-Sequence that breaks:
-1. Page mounts → `getSession()` resolves → `applySession()` sets `rolesLoading=true`, then the roles `useEffect` runs and flips it to `false`. ✅
-2. User navigates to `/profile`. Supabase fires `TOKEN_REFRESHED` (or `SIGNED_IN`) → `applySession()` runs again → **`rolesLoading` reset to `true`**.
-3. Roles `useEffect` depends on `[authReady, user?.id]`. Neither changed, so it **does not re-run**. → `rolesLoading` stays `true` forever → `loading` stays `true` → spinner forever = the white/loading screen.
+### `src/pages/Checkout.tsx` — Payment section (lines ~550-642)
 
-Pages that gate with `if (loading) return <Spinner/>` (Profile, MyOrders, ShippingAddress, UserSettings, etc.) all hit this.
+**1. Section header**
+- Title "Payment" + small lock icon and the line "All transactions are secure and encrypted" moved beside the title in a single header row.
+- Add a small "SSL Secured" badge (lock icon + text) on the right.
 
-A secondary symptom is the `QuickViewDialog` "function components cannot be given refs" console warning — non-blocking but noisy.
+**2. Each payment option becomes a polished card row**
+Replace the current single bordered list with separate cards (rounded-xl, subtle shadow, 1px border, hover lift). Selected card: 2px primary border + soft primary tint + check icon on the right.
 
-## Fix Plan
+Layout per row (left → right):
+```text
+[ radio ] [ logo box 56x40, white bg, border ] [ Title + subtitle ]      [ method badges ] [ check ]
+```
 
-### A. `src/hooks/useAuth.tsx` — make auth state resilient
-1. **Stop resetting `rolesLoading` on every session event.** Only set it `true` when the user **id actually changes** (initial sign-in, sign-out, account switch). Token refresh / metadata update must not toggle the spinner.
-2. Track the previous user id in a ref; compare before deciding whether to mark roles as loading again.
-3. Add a **safety timeout** (e.g., 5 s) on the roles fetch — if the network query hangs, default to non-staff and clear loading rather than stalling the whole UI.
-4. Stop ignoring `INITIAL_SESSION` — let it flow through `applySession` consistently (but still avoid the reset described in #1).
-5. Add `console.warn` on roles fetch error so future stalls are visible during dev.
+**3. Brand-correct logos (inline SVG, no external assets)**
+- **SSLCOMMERZ** → SSLCOMMERZ wordmark in brand navy.
+- **bKash** → pink (#E2136E) rounded badge with white "bKash" wordmark.
+- **Nagad** → orange (#F6921E) rounded badge with white "Nagad" wordmark.
+- **COD** → wallet/cash icon in a neutral square.
 
-### B. `src/pages/Profile.tsx` — don't block UI on auth roles
-- Keep gating on `if (!user)` redirect, but stop using the broad `loading` flag from `useAuth` to render a full-screen spinner. Show the page shell immediately and only spin inside the profile-data block (`profileLoading`). This way even if roles stall, the page still appears.
-- Same treatment for `src/pages/MyOrders.tsx`, `src/pages/ShippingAddress.tsx`, `src/pages/UserSettings.tsx`: render the layout, spin only inside the data area.
+**4. Method badges (right side, only for SSLCOMMERZ)**
+Replace the current colored "VISA / MC / AMEX / +2" pill chips with proper mini card-brand SVG logos in white pill containers with subtle border (Visa, Mastercard, Amex, Nexus, bKash). Keeps consistent height (h-5).
 
-### C. `src/components/storefront/QuickViewDialog.tsx` — silence ref warning
-- The warning points to `Dialog`/`DialogContent`. Wrap the offending child in a `<span>` or ensure no ref is forwarded to a non-forwardRef element (likely an icon used as `asChild` trigger). Quick targeted fix; keeps console clean.
+**5. Expanded details panel (when selected)**
+- SSLCOMMERZ: light info banner with shield icon — "You'll be securely redirected to SSLCOMMERZ to complete payment."
+- COD: info banner — "Pay in cash when your order is delivered. Available across Bangladesh."
+- bKash / Nagad: keep admin-configured instructions but render them inside a clean info card with the brand color as a left accent bar (no account number / instructions for bKash if memory rule says hide — keep the existing conditional, just style it).
+
+**6. Trust strip below the payment list**
+Small horizontal row of three icon+text items:
+- 🔒 SSL Secured
+- 🛡️ Buyer Protection
+- ✅ Verified Gateway
+
+**7. "Pay now" button polish (line 687-699)**
+- Add a lock icon before the label when method is online.
+- Subtitle below button: "Your payment info is encrypted and never stored." (text-xs muted-foreground, centered).
 
 ### Out of scope
-- No backend / RLS changes — policies are already correct.
-- No redesign of the profile / orders UI.
+- No changes to payment processing logic, admin settings, or DB.
+- No new payment methods.
+- No changes outside the Payment section + Pay-now button.
 
-## Files to edit
-- `src/hooks/useAuth.tsx`
-- `src/pages/Profile.tsx`
-- `src/pages/MyOrders.tsx`
-- `src/pages/ShippingAddress.tsx`
-- `src/pages/UserSettings.tsx`
-- `src/components/storefront/QuickViewDialog.tsx`
+## File touched
+- `src/pages/Checkout.tsx` (only the Payment `<section>` and the Pay-now button block)
 
 ## Expected result
-Clicking Profile, My Orders, Shipping Address, or Settings loads the page immediately. The brief spinner only appears in the data card while it fetches, and it always resolves — no more permanent loading / white screen after token refresh or returning to the tab.
+Professional, trust-building payment UI with real-looking gateway logos, clear selection states, secure-checkout cues, and a consistent card-based layout that matches modern e-commerce checkouts (Daraz / Shopify style).
 
