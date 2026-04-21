@@ -2,6 +2,7 @@ import { useOffers } from "@/hooks/useOffers";
 import { TopBanner, SidebarCard, InlinePromo } from "@/components/storefront/OfferBanners";
 import StoreHeader from "@/components/storefront/StoreHeader";
 import StoreFooter from "@/components/storefront/StoreFooter";
+import CategoryCarousel from "@/components/storefront/CategoryCarousel";
 import HeroSlider from "@/components/storefront/HeroSlider";
 import FlashSale from "@/components/storefront/FlashSale";
 import CategoriesGrid from "@/components/storefront/CategoriesGrid";
@@ -18,6 +19,7 @@ const Storefront = () => {
     <div className="min-h-screen bg-background text-foreground">
       {topOffers[0] && <TopBanner offer={topOffers[0]} />}
       <StoreHeader />
+      <CategoryCarousel />
 
       <main>
         {/* Hero Slider */}
