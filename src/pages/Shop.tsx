@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useSearchParams } from "react-router-dom";
@@ -16,12 +16,19 @@ const Shop = () => {
   const [searchParams] = useSearchParams();
   const categorySlug = searchParams.get("category");
   const searchQuery = searchParams.get("search") || "";
+  const discountedOnly = searchParams.get("discounted") === "true";
+  const sortParam = searchParams.get("sort");
 
-  const [sortBy, setSortBy] = useState("newest");
+  const [sortBy, setSortBy] = useState(sortParam || "newest");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 50000]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
+
+  // Sync sort with URL changes (e.g. clicking "New Arrivals" in header)
+  useEffect(() => {
+    if (sortParam) setSortBy(sortParam);
+  }, [sortParam]);
 
   const { data: categories = [] } = useQuery({
     queryKey: ["shop-categories"],
@@ -78,6 +85,7 @@ const Shop = () => {
   // Filter and sort
   const products = useMemo(() => {
     let filtered = rawProducts.filter((p: any) => {
+      if (discountedOnly && (!p.discount_percentage || p.discount_percentage <= 0)) return false;
       const minPrice = p.variants?.length
         ? Math.min(...p.variants.map((v: any) => v.price_override ?? p.base_price))
         : p.base_price;
@@ -108,7 +116,7 @@ const Shop = () => {
     });
 
     return filtered;
-  }, [rawProducts, sortBy, priceRange, selectedColors, selectedSizes]);
+  }, [rawProducts, sortBy, priceRange, selectedColors, selectedSizes, discountedOnly]);
 
   const hasActiveFilters = selectedColors.length > 0 || selectedSizes.length > 0 || priceRange[0] > 0 || priceRange[1] < 50000;
 
@@ -129,9 +137,11 @@ const Shop = () => {
           <h1 className="text-2xl sm:text-3xl font-bold font-heading">
             {searchQuery
               ? `Results for "${searchQuery}"`
-              : categorySlug
-                ? categories.find((c) => c.slug === categorySlug)?.name ?? "Shop"
-                : content?.heading || "All Products"}
+              : discountedOnly
+                ? "🔥 Sale — Discounted Products"
+                : categorySlug
+                  ? categories.find((c) => c.slug === categorySlug)?.name ?? "Shop"
+                  : content?.heading || "All Products"}
           </h1>
           <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground hidden sm:inline">{products.length} products</span>
