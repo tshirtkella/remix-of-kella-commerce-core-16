@@ -48,6 +48,7 @@ const BulkOrderDialog = ({ open, onOpenChange, productId, productName }: Props) 
   const { toast } = useToast();
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
