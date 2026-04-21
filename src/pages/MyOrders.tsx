@@ -170,7 +170,7 @@ const MyOrders = () => {
       {/* Header */}
       <div className="bg-card border-b border-border px-4 py-4">
         <div className="max-w-2xl mx-auto flex items-center gap-3">
-          <Link to="/profile"><ArrowLeft className="h-5 w-5 text-muted-foreground hover:text-foreground" /></Link>
+          <Link to="/profile" aria-label="Back to profile"><span className="inline-flex"><ArrowLeft className="h-5 w-5 text-muted-foreground hover:text-foreground" /></span></Link>
           <h1 className="text-lg font-heading font-bold text-foreground">{content?.heading || "My Orders"}</h1>
         </div>
       </div>

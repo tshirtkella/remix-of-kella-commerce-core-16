@@ -58,16 +58,36 @@ const StoreHeader = () => {
     staleTime: 10_000,
   });
 
-  // Close suggestions on outside click
+  const megaMenuRef = useRef<HTMLDivElement>(null);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Close suggestions + mega menu on outside click/touch
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+    const handler = (e: Event) => {
+      const target = e.target as Node;
+      if (searchRef.current && !searchRef.current.contains(target)) {
         setShowSuggestions(false);
+      }
+      if (megaMenuRef.current && !megaMenuRef.current.contains(target)) {
+        setShowCategories(false);
       }
     };
     document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    document.addEventListener("touchstart", handler);
+    return () => {
+      document.removeEventListener("mousedown", handler);
+      document.removeEventListener("touchstart", handler);
+    };
   }, []);
+
+  const openMega = () => {
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    setShowCategories(true);
+  };
+  const scheduleCloseMega = () => {
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    closeTimerRef.current = setTimeout(() => setShowCategories(false), 150);
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -251,12 +271,19 @@ const StoreHeader = () => {
 
             {/* Mega Menu */}
             <div
+              ref={megaMenuRef}
               className="relative"
-              onMouseEnter={() => setShowCategories(true)}
-              onMouseLeave={() => setShowCategories(false)}
+              onMouseEnter={openMega}
+              onMouseLeave={scheduleCloseMega}
             >
-              <button className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors px-3 py-1.5 rounded hover:bg-muted flex items-center gap-1 whitespace-nowrap">
-                Shop by Category <ChevronDown className="h-3 w-3" />
+              <button
+                type="button"
+                aria-haspopup="true"
+                aria-expanded={showCategories}
+                onClick={() => setShowCategories((v) => !v)}
+                className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors px-3 py-1.5 rounded hover:bg-muted flex items-center gap-1 whitespace-nowrap"
+              >
+                Shop by Category <ChevronDown className={`h-3 w-3 transition-transform ${showCategories ? "rotate-180" : ""}`} />
               </button>
               {showCategories && categories.length > 0 && (
                 <div className="absolute top-full left-0 bg-popover border border-border rounded-lg shadow-2xl z-50 w-[560px] p-5">
@@ -267,6 +294,7 @@ const StoreHeader = () => {
                         <Link
                           key={cat.id}
                           to={`/shop?category=${cat.slug}`}
+                          onClick={() => setShowCategories(false)}
                           className="flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-accent hover:text-primary transition group"
                         >
                           {cat.image_url ? (
@@ -284,6 +312,7 @@ const StoreHeader = () => {
                         <Link
                           key={cat.id}
                           to={`/shop?category=${cat.slug}`}
+                          onClick={() => setShowCategories(false)}
                           className="flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-accent hover:text-primary transition"
                         >
                           {cat.image_url ? (
