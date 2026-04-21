@@ -177,7 +177,7 @@ const ProductDetail = () => {
         </nav>
 
         {/* 3-column */}
-        <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr_280px] gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[400px_1fr_280px] gap-4 sm:gap-6">
           {/* Column 1: Image Gallery with Zoom */}
           <div className="space-y-3">
             <div

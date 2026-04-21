@@ -81,7 +81,7 @@ const ProductCard = ({ product, compact = false }: ProductCardProps) => {
     <>
       <Link
         to={`/product/${product.slug}`}
-        className={`group rounded-lg border border-border bg-card overflow-hidden hover:shadow-lg transition-all hover:-translate-y-0.5 relative ${totalStock === 0 ? "opacity-75" : ""}`}
+        className={`group rounded-lg border border-border bg-card overflow-hidden hover:shadow-lg transition-all hover:-translate-y-0.5 relative min-w-0 ${totalStock === 0 ? "opacity-75" : ""}`}
       >
         {/* Image */}
         <div className="aspect-square bg-muted/30 overflow-hidden relative">
