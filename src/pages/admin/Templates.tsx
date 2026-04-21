@@ -50,6 +50,10 @@ const PAGE_LABELS: Record<string, string> = {
   profile: "Profile Page",
   my_orders: "My Orders Page",
   not_found: "404 Page",
+  terms: "Terms of Service",
+  privacy: "Privacy Policy",
+  shipping: "Shipping Policy",
+  refund: "Refund Policy",
 };
 
 const IMAGE_FIELD_HINTS = ["image", "banner", "logo", "icon", "avatar", "photo", "thumbnail", "bg", "background", "hero_image"];

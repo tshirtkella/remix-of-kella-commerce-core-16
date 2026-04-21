@@ -47,6 +47,7 @@ const Checkout = () => {
   const [emailOffers, setEmailOffers] = useState(true);
   const [saveInfo, setSaveInfo] = useState(false);
   const [textOffers, setTextOffers] = useState(false);
+  const [acceptedPolicies, setAcceptedPolicies] = useState(false);
   const [attempted, setAttempted] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
@@ -227,6 +228,10 @@ const Checkout = () => {
     }
     if (items.length === 0) {
       toast({ title: "Your cart is empty", variant: "destructive" });
+      return;
+    }
+    if (!acceptedPolicies) {
+      toast({ title: "Please accept our policies to continue", variant: "destructive" });
       return;
     }
 
@@ -558,6 +563,31 @@ const Checkout = () => {
               </RadioGroup>
             </section>
 
+            {/* Policy Consent */}
+            <div className={`flex items-start gap-3 p-4 rounded-lg border-2 transition ${
+              attempted && !acceptedPolicies
+                ? "border-destructive bg-destructive/5"
+                : acceptedPolicies
+                ? "border-success/40 bg-success/5"
+                : "border-border bg-muted/20"
+            }`}>
+              <Checkbox
+                id="acceptPolicies"
+                checked={acceptedPolicies}
+                onCheckedChange={(v) => setAcceptedPolicies(!!v)}
+                className="mt-0.5"
+              />
+              <Label htmlFor="acceptPolicies" className="text-xs leading-relaxed cursor-pointer">
+                I accept the{" "}
+                <Link to="/terms" target="_blank" className="text-primary underline font-medium">terms of service</Link>,{" "}
+                <Link to="/privacy" target="_blank" className="text-primary underline font-medium">privacy policy</Link>,{" "}
+                <Link to="/shipping-policy" target="_blank" className="text-primary underline font-medium">shipping policy</Link>{" "}
+                &{" "}
+                <Link to="/refund-policy" target="_blank" className="text-primary underline font-medium">refund policy</Link>.
+                <span className="text-destructive ml-0.5">*</span>
+              </Label>
+            </div>
+
             {/* Pay Now button */}
             <Button
               className="w-full h-12 font-semibold text-base"
@@ -575,10 +605,10 @@ const Checkout = () => {
 
             {/* Footer links */}
             <div className="flex flex-wrap gap-4 text-xs text-muted-foreground pt-2 pb-8">
-              <Link to="/about" className="underline hover:text-foreground">Refund policy</Link>
-              <Link to="/about" className="underline hover:text-foreground">Shipping</Link>
-              <Link to="/about" className="underline hover:text-foreground">Privacy policy</Link>
-              <Link to="/about" className="underline hover:text-foreground">Terms of service</Link>
+              <Link to="/refund-policy" className="underline hover:text-foreground">Refund policy</Link>
+              <Link to="/shipping-policy" className="underline hover:text-foreground">Shipping</Link>
+              <Link to="/privacy" className="underline hover:text-foreground">Privacy policy</Link>
+              <Link to="/terms" className="underline hover:text-foreground">Terms of service</Link>
             </div>
           </div>
 

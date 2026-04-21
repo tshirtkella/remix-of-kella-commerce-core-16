@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Shirt, ShoppingBag, User, Shield, Search, Menu, X, ChevronDown } from "lucide-react";
+import { Shirt, ShoppingBag, User, Shield, Search, Menu, X, ChevronDown, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
@@ -25,7 +25,7 @@ const StoreHeader = () => {
   const { data: categories = [] } = useQuery({
     queryKey: ["header-categories"],
     queryFn: async () => {
-      const { data } = await supabase.from("categories").select("id, name, slug, image_url").order("name").limit(10);
+      const { data } = await supabase.from("categories").select("id, name, slug, image_url").order("name").limit(20);
       return data || [];
     },
   });
@@ -79,6 +79,13 @@ const StoreHeader = () => {
   };
 
   const hasSuggestions = (searchResults?.products?.length || 0) > 0 || (searchResults?.categories?.length || 0) > 0;
+  const callPhone = topBarContent?.call_phone || "";
+  const callHours = topBarContent?.call_hours || "";
+
+  // Split categories into 2 columns for mega menu
+  const half = Math.ceil(categories.length / 2);
+  const catCol1 = categories.slice(0, half);
+  const catCol2 = categories.slice(half);
 
   return (
     <header className="sticky top-0 z-40">
@@ -92,6 +99,13 @@ const StoreHeader = () => {
             <Link to="/support" className="hover:underline sm:hidden">Help</Link>
           </div>
           <div className="flex items-center gap-4">
+            {callPhone && (
+              <a href={`tel:${callPhone.replace(/\s/g, "")}`} className="hidden md:flex items-center gap-1 hover:underline font-medium">
+                <Phone className="h-3 w-3" />
+                <span>Call: {callPhone}</span>
+                {callHours && <span className="opacity-80">({callHours})</span>}
+              </a>
+            )}
             {user ? (
               <>
                 <Link to="/profile" className="hover:underline">My Account</Link>
@@ -149,7 +163,6 @@ const StoreHeader = () => {
               {/* Search Suggestions Dropdown */}
               {showSuggestions && hasSuggestions && (
                 <div className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-xl z-50 max-h-[400px] overflow-y-auto">
-                  {/* Category suggestions */}
                   {searchResults?.categories && searchResults.categories.length > 0 && (
                     <div className="p-2 border-b border-border">
                       <p className="text-[10px] font-semibold text-muted-foreground uppercase px-2 mb-1">Categories</p>
@@ -170,7 +183,6 @@ const StoreHeader = () => {
                       ))}
                     </div>
                   )}
-                  {/* Product suggestions */}
                   {searchResults?.products && searchResults.products.length > 0 && (
                     <div className="p-2">
                       <p className="text-[10px] font-semibold text-muted-foreground uppercase px-2 mb-1">Products</p>
@@ -231,27 +243,75 @@ const StoreHeader = () => {
         </div>
       </div>
 
-      {/* Category Navigation Bar */}
+      {/* Category Navigation Bar with Mega Menu */}
       <div className="bg-card border-b border-border hidden md:block">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex items-center gap-1 h-10 overflow-x-auto scrollbar-hide">
             <Link to="/" className="text-xs font-medium text-foreground hover:text-primary transition-colors px-3 py-1.5 rounded hover:bg-muted whitespace-nowrap">Home</Link>
-            <div className="relative group" onMouseEnter={() => setShowCategories(true)} onMouseLeave={() => setShowCategories(false)}>
+
+            {/* Mega Menu */}
+            <div
+              className="relative"
+              onMouseEnter={() => setShowCategories(true)}
+              onMouseLeave={() => setShowCategories(false)}
+            >
               <button className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors px-3 py-1.5 rounded hover:bg-muted flex items-center gap-1 whitespace-nowrap">
-                Categories <ChevronDown className="h-3 w-3" />
+                Shop by Category <ChevronDown className="h-3 w-3" />
               </button>
-              {showCategories && (
-                <div className="absolute top-full left-0 bg-popover border border-border rounded-lg shadow-lg z-50 min-w-[180px] py-1">
-                  <Link to="/categories" className="block px-4 py-2 text-sm hover:bg-accent transition-colors font-medium text-primary">All Categories</Link>
-                  {categories.map((cat) => (
-                    <Link key={cat.id} to={`/shop?category=${cat.slug}`} className="block px-4 py-2 text-sm hover:bg-accent transition-colors">
-                      {cat.name}
+              {showCategories && categories.length > 0 && (
+                <div className="absolute top-full left-0 bg-popover border border-border rounded-lg shadow-2xl z-50 w-[560px] p-5">
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-1">
+                    <div className="space-y-0.5">
+                      <p className="text-[10px] font-bold uppercase text-primary mb-2 tracking-wider">Browse</p>
+                      {catCol1.map((cat) => (
+                        <Link
+                          key={cat.id}
+                          to={`/shop?category=${cat.slug}`}
+                          className="flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-accent hover:text-primary transition group"
+                        >
+                          {cat.image_url ? (
+                            <img src={cat.image_url} alt={cat.name} className="w-7 h-7 rounded object-cover" />
+                          ) : (
+                            <div className="w-7 h-7 rounded bg-muted flex items-center justify-center text-xs opacity-50">📦</div>
+                          )}
+                          <span className="line-clamp-1">{cat.name}</span>
+                        </Link>
+                      ))}
+                    </div>
+                    <div className="space-y-0.5">
+                      <p className="text-[10px] font-bold uppercase text-primary mb-2 tracking-wider">More</p>
+                      {catCol2.map((cat) => (
+                        <Link
+                          key={cat.id}
+                          to={`/shop?category=${cat.slug}`}
+                          className="flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-accent hover:text-primary transition"
+                        >
+                          {cat.image_url ? (
+                            <img src={cat.image_url} alt={cat.name} className="w-7 h-7 rounded object-cover" />
+                          ) : (
+                            <div className="w-7 h-7 rounded bg-muted flex items-center justify-center text-xs opacity-50">📦</div>
+                          )}
+                          <span className="line-clamp-1">{cat.name}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-border flex justify-between items-center">
+                    <p className="text-xs text-muted-foreground">{categories.length} categories available</p>
+                    <Link
+                      to="/categories"
+                      className="text-xs font-semibold text-primary hover:underline"
+                    >
+                      View All Categories →
                     </Link>
-                  ))}
+                  </div>
                 </div>
               )}
             </div>
+
             <Link to="/shop" className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors px-3 py-1.5 rounded hover:bg-muted whitespace-nowrap">Shop All</Link>
+            <Link to="/shop?sort=newest" className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors px-3 py-1.5 rounded hover:bg-muted whitespace-nowrap">New Arrivals</Link>
+            <Link to="/shop?discounted=true" className="text-xs font-medium text-destructive hover:text-destructive/80 transition-colors px-3 py-1.5 rounded hover:bg-muted whitespace-nowrap font-semibold">SALE 🔥</Link>
             <Link to="/about-us" className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors px-3 py-1.5 rounded hover:bg-muted whitespace-nowrap">About Us</Link>
             <Link to="/support" className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors px-3 py-1.5 rounded hover:bg-muted whitespace-nowrap">Support</Link>
           </nav>
@@ -260,11 +320,17 @@ const StoreHeader = () => {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-card border-b border-border">
+        <div className="lg:hidden bg-card border-b border-border max-h-[80vh] overflow-y-auto">
           <div className="px-4 py-3 space-y-2">
+            {callPhone && (
+              <a href={`tel:${callPhone.replace(/\s/g, "")}`} className="flex items-center gap-2 py-2 text-sm font-medium text-primary border-b border-border mb-2">
+                <Phone className="h-4 w-4" /> Call to Order: {callPhone}
+              </a>
+            )}
             <Link to="/" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-medium">Home</Link>
             <Link to="/shop" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-medium">Shop All</Link>
-            <Link to="/categories" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-medium">Categories</Link>
+            <Link to="/shop?discounted=true" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-semibold text-destructive">SALE 🔥</Link>
+            <Link to="/categories" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-medium">All Categories</Link>
             {categories.map((cat) => (
               <Link key={cat.id} to={`/shop?category=${cat.slug}`} onClick={() => setMobileMenuOpen(false)} className="block py-1.5 text-sm text-muted-foreground pl-4">
                 {cat.name}
