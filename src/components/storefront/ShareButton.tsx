@@ -4,6 +4,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useBranding } from "@/hooks/useBranding";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
 interface ShareButtonProps {
@@ -13,6 +15,9 @@ interface ShareButtonProps {
   image?: string;
   variant?: "full" | "icon" | "ghost-icon";
   className?: string;
+  productId?: string;
+  productSlug?: string;
+  productName?: string;
 }
 
 const openShareWindow = (shareUrl: string) => {
