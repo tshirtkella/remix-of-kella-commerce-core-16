@@ -55,27 +55,39 @@ const CartDrawer = () => {
                     <p className="text-sm font-semibold mt-1">{format(item.price)}</p>
                     <div className="flex items-center gap-2 mt-2">
                       <button
+                        type="button"
+                        aria-label={`Decrease quantity of ${item.name}`}
                         onClick={() => updateQuantity(item.variantId, item.quantity - 1)}
-                        className="h-7 w-7 rounded border border-border flex items-center justify-center hover:bg-muted transition"
+                        className="h-9 w-9 rounded border border-border flex items-center justify-center hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none transition"
                       >
-                        <Minus className="h-3 w-3" />
+                        <Minus className="h-4 w-4" aria-hidden="true" />
                       </button>
-                      <span className="text-sm font-medium w-6 text-center">{item.quantity}</span>
+                      <span
+                        className="text-sm font-medium w-8 text-center"
+                        aria-live="polite"
+                        aria-label={`Quantity: ${item.quantity}`}
+                      >
+                        {item.quantity}
+                      </span>
                       <button
+                        type="button"
+                        aria-label={`Increase quantity of ${item.name}`}
                         onClick={() => {
                           const success = updateQuantity(item.variantId, item.quantity + 1);
                           if (!success) {
                             toast({ title: "Stock limit reached!", description: `Only ${item.maxStock} available.`, variant: "destructive" });
                           }
                         }}
-                        className="h-7 w-7 rounded border border-border flex items-center justify-center hover:bg-muted transition">
-                        <Plus className="h-3 w-3" />
+                        className="h-9 w-9 rounded border border-border flex items-center justify-center hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none transition">
+                        <Plus className="h-4 w-4" aria-hidden="true" />
                       </button>
                       <button
+                        type="button"
+                        aria-label={`Remove ${item.name} from cart`}
                         onClick={() => removeItem(item.variantId)}
-                        className="ml-auto h-7 w-7 rounded flex items-center justify-center text-muted-foreground hover:text-destructive transition"
+                        className="ml-auto h-9 w-9 rounded flex items-center justify-center text-muted-foreground hover:text-destructive focus-visible:ring-2 focus-visible:ring-destructive focus-visible:outline-none transition"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 className="h-4 w-4" aria-hidden="true" />
                       </button>
                     </div>
                   </div>
