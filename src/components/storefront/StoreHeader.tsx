@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Shirt, ShoppingBag, User, Shield, Search, Menu, X, ChevronDown, Phone } from "lucide-react";
+import { Shirt, ShoppingBag, User, Shield, Search, Menu, X, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,7 +17,6 @@ const StoreHeader = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [showCategories, setShowCategories] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const topBarContent = usePageSection("home", "top_bar");
@@ -58,18 +57,12 @@ const StoreHeader = () => {
     staleTime: 10_000,
   });
 
-  const megaMenuRef = useRef<HTMLDivElement>(null);
-  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Close suggestions + mega menu on outside click/touch
+  // Close suggestions on outside click/touch
   useEffect(() => {
     const handler = (e: Event) => {
       const target = e.target as Node;
       if (searchRef.current && !searchRef.current.contains(target)) {
         setShowSuggestions(false);
-      }
-      if (megaMenuRef.current && !megaMenuRef.current.contains(target)) {
-        setShowCategories(false);
       }
     };
     document.addEventListener("mousedown", handler);
@@ -79,15 +72,6 @@ const StoreHeader = () => {
       document.removeEventListener("touchstart", handler);
     };
   }, []);
-
-  const openMega = () => {
-    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-    setShowCategories(true);
-  };
-  const scheduleCloseMega = () => {
-    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-    closeTimerRef.current = setTimeout(() => setShowCategories(false), 150);
-  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,11 +86,6 @@ const StoreHeader = () => {
   const callPhone = topBarContent?.call_phone || "";
   const callHours = topBarContent?.call_hours || "";
 
-  // Split categories into 2 columns for mega menu
-  const half = Math.ceil(categories.length / 2);
-  const catCol1 = categories.slice(0, half);
-  const catCol2 = categories.slice(half);
-
   return (
     <header className="sticky top-0 z-40">
       {/* Value Proposition Bar */}
@@ -118,7 +97,7 @@ const StoreHeader = () => {
             </span>
             <Link to="/support" className="hover:underline sm:hidden">Help</Link>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             {callPhone && (
               <a href={`tel:${callPhone.replace(/\s/g, "")}`} className="hidden md:flex items-center gap-1 hover:underline font-medium">
                 <Phone className="h-3 w-3" />
@@ -128,14 +107,14 @@ const StoreHeader = () => {
             )}
             {user ? (
               <>
-                <Link to="/profile" className="hover:underline">My Account</Link>
-                <Link to="/my-orders" className="hover:underline">My Orders</Link>
+                <Link to="/profile" className="hover:underline hidden sm:inline">My Account</Link>
+                <Link to="/my-orders" className="hover:underline hidden sm:inline">My Orders</Link>
                 <button onClick={() => void signOut()} className="hover:underline">Logout</button>
               </>
             ) : (
               <>
                 <Link to="/login" className="hover:underline font-semibold">Login</Link>
-                <Link to="/login" className="hover:underline font-semibold">Sign Up</Link>
+                <Link to="/login" className="hover:underline font-semibold hidden xs:inline sm:inline">Sign Up</Link>
               </>
             )}
           </div>
@@ -145,9 +124,9 @@ const StoreHeader = () => {
       {/* Main header */}
       <div className="bg-card/95 backdrop-blur-lg border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-4 h-14">
+          <div className="flex items-center gap-2 sm:gap-4 h-14">
             {/* Mobile menu toggle */}
-            <button className="lg:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+            <button className="lg:hidden shrink-0" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Menu">
               {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
 
@@ -164,7 +143,7 @@ const StoreHeader = () => {
             </Link>
 
             {/* Central Search Bar with suggestions */}
-            <div ref={searchRef} className="flex-1 max-w-2xl mx-auto relative">
+            <div ref={searchRef} className="flex-1 min-w-0 max-w-2xl mx-auto relative">
               <form onSubmit={handleSearch}>
                 <div className="flex items-center">
                   <Input
@@ -263,86 +242,13 @@ const StoreHeader = () => {
         </div>
       </div>
 
-      {/* Category Navigation Bar with Mega Menu */}
+      {/* Category Navigation Bar */}
       <div className="bg-card border-b border-border hidden md:block">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex items-center gap-1 h-10 overflow-x-auto scrollbar-hide">
             <Link to="/" className="text-xs font-medium text-foreground hover:text-primary transition-colors px-3 py-1.5 rounded hover:bg-muted whitespace-nowrap">Home</Link>
-
-            {/* Mega Menu */}
-            <div
-              ref={megaMenuRef}
-              className="relative"
-              onMouseEnter={openMega}
-              onMouseLeave={scheduleCloseMega}
-            >
-              <button
-                type="button"
-                aria-haspopup="true"
-                aria-expanded={showCategories}
-                onClick={() => setShowCategories((v) => !v)}
-                className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors px-3 py-1.5 rounded hover:bg-muted flex items-center gap-1 whitespace-nowrap"
-              >
-                Shop by Category <ChevronDown className={`h-3 w-3 transition-transform ${showCategories ? "rotate-180" : ""}`} />
-              </button>
-              {showCategories && categories.length > 0 && (
-                <div className="absolute top-full left-0 bg-popover border border-border rounded-lg shadow-2xl z-50 w-[560px] p-5">
-                  <div className="grid grid-cols-2 gap-x-6 gap-y-1">
-                    <div className="space-y-0.5">
-                      <p className="text-[10px] font-bold uppercase text-primary mb-2 tracking-wider">Browse</p>
-                      {catCol1.map((cat) => (
-                        <Link
-                          key={cat.id}
-                          to={`/shop?category=${cat.slug}`}
-                          onClick={() => setShowCategories(false)}
-                          className="flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-accent hover:text-primary transition group"
-                        >
-                          {cat.image_url ? (
-                            <img src={cat.image_url} alt={cat.name} className="w-7 h-7 rounded object-cover" />
-                          ) : (
-                            <div className="w-7 h-7 rounded bg-muted flex items-center justify-center text-xs opacity-50">📦</div>
-                          )}
-                          <span className="line-clamp-1">{cat.name}</span>
-                        </Link>
-                      ))}
-                    </div>
-                    <div className="space-y-0.5">
-                      <p className="text-[10px] font-bold uppercase text-primary mb-2 tracking-wider">More</p>
-                      {catCol2.map((cat) => (
-                        <Link
-                          key={cat.id}
-                          to={`/shop?category=${cat.slug}`}
-                          onClick={() => setShowCategories(false)}
-                          className="flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-accent hover:text-primary transition"
-                        >
-                          {cat.image_url ? (
-                            <img src={cat.image_url} alt={cat.name} className="w-7 h-7 rounded object-cover" />
-                          ) : (
-                            <div className="w-7 h-7 rounded bg-muted flex items-center justify-center text-xs opacity-50">📦</div>
-                          )}
-                          <span className="line-clamp-1">{cat.name}</span>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="mt-3 pt-3 border-t border-border flex justify-between items-center">
-                    <p className="text-xs text-muted-foreground">{categories.length} categories available</p>
-                    <Link
-                      to="/categories"
-                      className="text-xs font-semibold text-primary hover:underline"
-                    >
-                      View All Categories →
-                    </Link>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <Link to="/shop" className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors px-3 py-1.5 rounded hover:bg-muted whitespace-nowrap">Shop All</Link>
             <Link to="/shop?sort=newest" className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors px-3 py-1.5 rounded hover:bg-muted whitespace-nowrap">New Arrivals</Link>
             <Link to="/shop?discounted=true" className="text-xs font-medium text-destructive hover:text-destructive/80 transition-colors px-3 py-1.5 rounded hover:bg-muted whitespace-nowrap font-semibold">SALE 🔥</Link>
-            <Link to="/about-us" className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors px-3 py-1.5 rounded hover:bg-muted whitespace-nowrap">About Us</Link>
-            <Link to="/support" className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors px-3 py-1.5 rounded hover:bg-muted whitespace-nowrap">Support</Link>
           </nav>
         </div>
       </div>
