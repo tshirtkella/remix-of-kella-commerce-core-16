@@ -3,12 +3,13 @@ import { Link } from "react-router-dom";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Minus, Plus, ShoppingCart, Star, Heart, Share2, Clock, Truck, ShieldCheck, RotateCcw, AlertTriangle } from "lucide-react";
+import { Minus, Plus, ShoppingCart, Star, Heart, Clock, Truck, ShieldCheck, RotateCcw, AlertTriangle } from "lucide-react";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useCart } from "@/hooks/useCart";
 import { useToast } from "@/hooks/use-toast";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useAuth } from "@/hooks/useAuth";
+import ShareButton from "./ShareButton";
 
 interface QuickViewDialogProps {
   product: any;
@@ -88,15 +89,6 @@ const QuickViewDialog = ({ product, open, onOpenChange }: QuickViewDialogProps) 
     toggle(product.id);
   };
 
-  const handleShare = async () => {
-    const url = `${window.location.origin}/product/${product.slug}`;
-    if (navigator.share) {
-      try { await navigator.share({ title: product.name, url }); } catch {}
-    } else {
-      await navigator.clipboard.writeText(url);
-      toast({ title: "Link copied!" });
-    }
-  };
 
   if (!product) return null;
 
@@ -144,13 +136,13 @@ const QuickViewDialog = ({ product, open, onOpenChange }: QuickViewDialogProps) 
 
             {/* Action icons */}
             <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={handleShare}
-                aria-label="Share product"
-                className="text-muted-foreground hover:text-foreground transition focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded p-1">
-                <Share2 className="h-4 w-4" aria-hidden="true" />
-              </button>
+              <ShareButton
+                variant="ghost-icon"
+                url={`${window.location.origin}/product/${product.slug}`}
+                title={product.name}
+                description={product.description ?? undefined}
+                image={image?.url}
+              />
               <button
                 type="button"
                 onClick={handleWishlist}

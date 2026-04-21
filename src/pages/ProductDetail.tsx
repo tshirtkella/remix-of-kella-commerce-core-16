@@ -6,7 +6,7 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { useCart } from "@/hooks/useCart";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Minus, Plus, ChevronLeft, ChevronRight, Loader2, Share2, Heart, Clock, AlertTriangle } from "lucide-react";
+import { Minus, Plus, ChevronLeft, ChevronRight, Loader2, Heart, Clock, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import StoreHeader from "@/components/storefront/StoreHeader";
 import StoreFooter from "@/components/storefront/StoreFooter";
@@ -16,6 +16,8 @@ import ProductReviews from "@/components/storefront/ProductReviews";
 import SizeGuideDialog from "@/components/storefront/SizeGuideDialog";
 import FrequentlyBoughtTogether from "@/components/storefront/FrequentlyBoughtTogether";
 import BulkOrderDialog from "@/components/storefront/BulkOrderDialog";
+import ShareButton from "@/components/storefront/ShareButton";
+import { useProductMeta } from "@/hooks/useProductMeta";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -76,6 +78,18 @@ const ProductDetail = () => {
     if (!product?.images?.length) return [];
     return [...product.images].sort((a: any, b: any) => a.position - b.position);
   }, [product]);
+
+  useProductMeta(
+    product
+      ? {
+          name: product.name,
+          description: (product as any).description,
+          image: (images[0] as any)?.url,
+          url: typeof window !== "undefined" ? `${window.location.origin}/product/${product.slug}` : undefined,
+          price: product.base_price,
+        }
+      : null,
+  );
 
   if (colors.length > 0 && !selectedColor) {
     setSelectedColor(colors[0] as string);
@@ -246,9 +260,15 @@ const ProductDetail = () => {
           <div className="space-y-4">
             <h1 className="text-xl sm:text-2xl font-heading font-bold leading-tight">{product.name}</h1>
 
-            <div className="flex items-center gap-3">
-              <button className="text-muted-foreground hover:text-foreground transition"><Share2 className="h-5 w-5" /></button>
-              <button className="text-muted-foreground hover:text-destructive transition"><Heart className="h-5 w-5" /></button>
+            <div className="flex items-center gap-2">
+              <ShareButton
+                variant="full"
+                url={`${window.location.origin}/product/${product.slug}`}
+                title={product.name}
+                description={product.description ?? undefined}
+                image={images[0]?.url}
+              />
+              <button className="text-muted-foreground hover:text-destructive transition p-2 rounded-md hover:bg-muted/50" aria-label="Add to wishlist"><Heart className="h-5 w-5" /></button>
             </div>
 
             {(product as any).categories && (
