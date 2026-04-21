@@ -89,7 +89,7 @@ const BulkOrderDialog = ({ open, onOpenChange, productId, productName }: Props) 
       return;
     }
     setSubmitting(true);
-    const { data, error } = await (supabase.from("bulk_orders") as any).insert({
+    const { error } = await (supabase.from("bulk_orders") as any).insert({
       ...parsed.data,
       product_id: productId ?? null,
       product_name: productName ?? null,
