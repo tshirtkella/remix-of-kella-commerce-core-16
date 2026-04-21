@@ -289,6 +289,8 @@ const Checkout = () => {
     }
 
     setIsSubmitting(true);
+    const isOnlinePayment = paymentMethod !== "cod";
+    if (isOnlinePayment) setRedirecting(true);
 
     try {
       const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
