@@ -161,6 +161,14 @@ const BulkOrderDialog = ({ open, onOpenChange, productId, productName }: Props) 
                 </div>
               )}
 
+              {submitError && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Submission failed</AlertTitle>
+                  <AlertDescription className="break-words">{submitError}</AlertDescription>
+                </Alert>
+              )}
+
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="bo-name">Your Full Name *</Label>
