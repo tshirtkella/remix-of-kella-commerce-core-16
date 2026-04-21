@@ -93,10 +93,16 @@ const QuickViewDialog = ({ product, open, onOpenChange }: QuickViewDialogProps) 
           </div>
 
           {/* Info */}
-          <div className="sm:w-1/2 p-5 space-y-3">
-            <Link to={`/product/${product.slug}`} onClick={() => onOpenChange(false)} className="text-lg font-bold font-heading hover:text-primary transition line-clamp-2">
+          <div className="sm:w-1/2 p-5 space-y-3 max-h-[80vh] overflow-y-auto">
+            <Link to={`/product/${product.slug}`} onClick={() => onOpenChange(false)} className="text-lg font-bold font-heading hover:text-primary transition line-clamp-2 block">
               {product.name}
             </Link>
+
+            {product.categories?.name && (
+              <p className="text-xs text-muted-foreground">
+                Category: <span className="text-foreground">{product.categories.name}</span>
+              </p>
+            )}
 
             {product.discount_percentage > 0 ? (
               <div>
@@ -110,14 +116,30 @@ const QuickViewDialog = ({ product, open, onOpenChange }: QuickViewDialogProps) 
               <p className="text-xl font-bold text-primary">{format(Number(displayPrice))}</p>
             )}
 
+            {product.description && (
+              <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">{product.description}</p>
+            )}
+
+            {totalStock > 0 && (
+              <p className="text-xs text-muted-foreground">
+                In stock: <span className="font-semibold text-foreground">{totalStock} units</span>
+              </p>
+            )}
+
             {/* Color */}
             {colors.length > 0 && (
-              <div>
-                <p className="text-xs font-medium mb-1.5">Color: {selectedColor}</p>
+              <div role="radiogroup" aria-label="Color">
+                <p className="text-xs font-medium mb-1.5">Color: <span className="text-foreground">{selectedColor}</span></p>
                 <div className="flex flex-wrap gap-1.5">
                   {colors.map((c) => (
-                    <button key={c as string} onClick={() => { setSelectedColor(c as string); setSelectedSize(null); }}
-                      className={`px-3 py-1 rounded border text-xs font-medium ${selectedColor === c ? "border-primary bg-primary/5 text-primary" : "border-border"}`}>
+                    <button
+                      key={c as string}
+                      type="button"
+                      role="radio"
+                      aria-checked={selectedColor === c}
+                      aria-label={`Color ${c as string}`}
+                      onClick={() => { setSelectedColor(c as string); setSelectedSize(null); }}
+                      className={`min-h-[36px] px-3 py-1.5 rounded border text-xs font-medium focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none ${selectedColor === c ? "border-primary bg-primary/5 text-primary" : "border-border"}`}>
                       {c as string}
                     </button>
                   ))}
@@ -127,15 +149,22 @@ const QuickViewDialog = ({ product, open, onOpenChange }: QuickViewDialogProps) 
 
             {/* Size */}
             {sizes.length > 0 && (
-              <div>
+              <div role="radiogroup" aria-label="Size">
                 <p className="text-xs font-medium mb-1.5">Size</p>
                 <div className="flex flex-wrap gap-1.5">
                   {sizes.map((s) => {
                     const v = product.variants?.find((v: any) => v.is_active && v.color === selectedColor && v.size === s);
                     const oos = v && v.inventory_quantity === 0;
                     return (
-                      <button key={s as string} onClick={() => !oos && setSelectedSize(s as string)} disabled={!!oos}
-                        className={`min-w-[40px] px-3 py-1 rounded border text-xs font-medium ${oos ? "border-border text-muted-foreground/40 line-through" : selectedSize === s ? "border-primary bg-primary/5 text-primary" : "border-border"}`}>
+                      <button
+                        key={s as string}
+                        type="button"
+                        role="radio"
+                        aria-checked={selectedSize === s}
+                        aria-label={`Size ${s as string}${oos ? " (out of stock)" : ""}`}
+                        onClick={() => !oos && setSelectedSize(s as string)}
+                        disabled={!!oos}
+                        className={`min-w-[40px] min-h-[36px] px-3 py-1.5 rounded border text-xs font-medium focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none ${oos ? "border-border text-muted-foreground/40 line-through" : selectedSize === s ? "border-primary bg-primary/5 text-primary" : "border-border"}`}>
                         {s as string}
                       </button>
                     );
@@ -150,12 +179,29 @@ const QuickViewDialog = ({ product, open, onOpenChange }: QuickViewDialogProps) 
             {/* Qty + Add */}
             <div className="flex items-center gap-3 pt-2">
               <div className="inline-flex items-center border border-border rounded">
-                <button onClick={() => setQuantity(q => Math.max(1, q - 1))} className="h-8 w-8 flex items-center justify-center hover:bg-muted/50"><Minus className="h-3 w-3" /></button>
-                <span className="w-8 text-center text-sm font-medium border-x border-border">{quantity}</span>
-                <button onClick={() => setQuantity(q => q + 1)} className="h-8 w-8 flex items-center justify-center hover:bg-muted/50"><Plus className="h-3 w-3" /></button>
+                <button
+                  type="button"
+                  aria-label="Decrease quantity"
+                  onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                  className="h-9 w-9 flex items-center justify-center hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none">
+                  <Minus className="h-3.5 w-3.5" aria-hidden="true" />
+                </button>
+                <span
+                  className="w-10 text-center text-sm font-medium border-x border-border"
+                  aria-live="polite"
+                  aria-label={`Quantity: ${quantity}`}>
+                  {quantity}
+                </span>
+                <button
+                  type="button"
+                  aria-label="Increase quantity"
+                  onClick={() => setQuantity(q => q + 1)}
+                  className="h-9 w-9 flex items-center justify-center hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none">
+                  <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                </button>
               </div>
-              <Button onClick={handleAdd} disabled={totalStock === 0} className="flex-1 h-9 text-sm">
-                <ShoppingCart className="h-4 w-4 mr-2" />
+              <Button onClick={handleAdd} disabled={totalStock === 0} className="flex-1 h-10 text-sm">
+                <ShoppingCart className="h-4 w-4 mr-2" aria-hidden="true" />
                 {totalStock === 0 ? "Out of Stock" : "Add to Cart"}
               </Button>
             </div>
