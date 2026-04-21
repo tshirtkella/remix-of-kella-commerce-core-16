@@ -68,6 +68,7 @@ const BulkOrderDialog = ({ open, onOpenChange, productId, productName }: Props) 
     setCategories([]); setCustomPrint("no"); setPrintDetails("");
     setCustomTag("no"); setTagDetails(""); setPurpose(""); setPurposeOther(""); setNotes("");
     setSubmitted(false);
+    setSubmitError(null);
   };
 
   const toggleCategory = (cat: string) => {
