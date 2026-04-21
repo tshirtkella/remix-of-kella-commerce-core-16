@@ -360,10 +360,18 @@ const Checkout = () => {
 
       await deleteDraft();
       clearCart();
+
+      // Brief intentional pause so the redirect overlay doesn't flash away
+      if (isOnlinePayment) {
+        await new Promise((r) => setTimeout(r, 800));
+        setRedirecting(false);
+      }
+
       toast({ title: "Order placed!", description: `Order #${orderNumber} confirmed.` });
       navigate("/");
     } catch (err: any) {
       console.error("Order error:", err);
+      setRedirecting(false);
       toast({ title: "Failed to place order", description: err.message, variant: "destructive" });
     } finally {
       setIsSubmitting(false);
