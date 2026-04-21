@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import StoreHeader from "@/components/storefront/StoreHeader";
 import CheckoutChatWidget from "@/components/storefront/CheckoutChatWidget";
 import StoreFooter from "@/components/storefront/StoreFooter";
+import PaymentRedirectOverlay from "@/components/storefront/PaymentRedirectOverlay";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 type ShippingZone = "inside_dhaka" | "sub_dhaka" | "outside_dhaka";
