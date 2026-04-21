@@ -12,21 +12,31 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { bulkOrderId } = await req.json();
-    if (!bulkOrderId || typeof bulkOrderId !== "string") {
-      return new Response(JSON.stringify({ error: "bulkOrderId required" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const body = await req.json();
+    const { bulkOrderId, email } = body ?? {};
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { data: order, error } = await supabase
-      .from("bulk_orders").select("*").eq("id", bulkOrderId).single();
-    if (error || !order) {
+    let order: any = null;
+    if (bulkOrderId && typeof bulkOrderId === "string") {
+      const { data } = await supabase.from("bulk_orders").select("*").eq("id", bulkOrderId).maybeSingle();
+      order = data;
+    } else if (email && typeof email === "string") {
+      // Fallback: fetch most recent order for this email (anon clients can't read inserted IDs under RLS)
+      const { data } = await supabase
+        .from("bulk_orders").select("*").eq("email", email)
+        .order("created_at", { ascending: false }).limit(1).maybeSingle();
+      order = data;
+    } else {
+      return new Response(JSON.stringify({ error: "bulkOrderId or email required" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (!order) {
       return new Response(JSON.stringify({ error: "Order not found" }), {
         status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
