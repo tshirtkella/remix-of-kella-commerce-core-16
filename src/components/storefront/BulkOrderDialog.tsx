@@ -89,11 +89,11 @@ const BulkOrderDialog = ({ open, onOpenChange, productId, productName }: Props) 
       return;
     }
     setSubmitting(true);
-    const { data, error } = await (supabase.from("bulk_orders") as any).insert({
+    const { error } = await (supabase.from("bulk_orders") as any).insert({
       ...parsed.data,
       product_id: productId ?? null,
       product_name: productName ?? null,
-    }).select().single();
+    });
 
     if (error) {
       console.error(error);
@@ -102,8 +102,8 @@ const BulkOrderDialog = ({ open, onOpenChange, productId, productName }: Props) 
       return;
     }
 
-    // Fire email notification (non-blocking)
-    supabase.functions.invoke("notify-bulk-order", { body: { bulkOrderId: data.id } }).catch((err) => {
+    // Fire email notification (non-blocking) — admin lookup happens server-side
+    supabase.functions.invoke("notify-bulk-order", { body: { email: parsed.data.email, full_name: parsed.data.full_name } }).catch((err) => {
       console.warn("Email notify failed (non-blocking):", err);
     });
 
