@@ -58,16 +58,36 @@ const StoreHeader = () => {
     staleTime: 10_000,
   });
 
-  // Close suggestions on outside click
+  const megaMenuRef = useRef<HTMLDivElement>(null);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Close suggestions + mega menu on outside click/touch
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+    const handler = (e: Event) => {
+      const target = e.target as Node;
+      if (searchRef.current && !searchRef.current.contains(target)) {
         setShowSuggestions(false);
+      }
+      if (megaMenuRef.current && !megaMenuRef.current.contains(target)) {
+        setShowCategories(false);
       }
     };
     document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    document.addEventListener("touchstart", handler);
+    return () => {
+      document.removeEventListener("mousedown", handler);
+      document.removeEventListener("touchstart", handler);
+    };
   }, []);
+
+  const openMega = () => {
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    setShowCategories(true);
+  };
+  const scheduleCloseMega = () => {
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    closeTimerRef.current = setTimeout(() => setShowCategories(false), 150);
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
