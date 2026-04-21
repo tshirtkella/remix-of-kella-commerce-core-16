@@ -493,20 +493,22 @@ const Checkout = () => {
                 <Input name="zip" value={form.zip} onChange={handleChange} placeholder="Postal code (optional)" />
               </div>
 
-              <div className="relative">
-                <Input name="phone" value={form.phone} onChange={handleChange} placeholder="Phone *" className={getFieldError("phone") ? "border-destructive ring-1 ring-destructive" : ""} />
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <HelpCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="text-xs">In case we need to contact you about your order</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                {getFieldError("phone") && <p className="text-xs text-destructive mt-1">{getFieldError("phone")}</p>}
-              </div>
+              <PhoneInput
+                name="phone"
+                value={form.phone}
+                onChange={(v) => {
+                  setForm((prev) => ({ ...prev, phone: v }));
+                  if (fieldErrors.phone) {
+                    setFieldErrors((prev) => {
+                      const next = { ...prev };
+                      delete next.phone;
+                      return next;
+                    });
+                  }
+                }}
+                label="Phone"
+                error={getFieldError("phone")}
+              />
 
               <div className="flex items-center gap-2">
                 <Checkbox id="saveInfo" checked={saveInfo} onCheckedChange={(v) => setSaveInfo(!!v)} />
