@@ -821,6 +821,7 @@ const Checkout = () => {
 
       <StoreFooter />
       <CheckoutChatWidget sessionId={sessionId} />
+      <PaymentRedirectOverlay open={redirecting} gatewayName={paymentMethod === "bkash" ? "bKash" : paymentMethod === "nagad" ? "Nagad" : "SSLCOMMERZ"} />
     </div>
   );
 };
