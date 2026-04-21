@@ -17,21 +17,21 @@ const StoreFooter = () => {
             <ul className="space-y-2.5 text-sm opacity-70">
               <li><Link to="/support" className="hover:opacity-100 transition">Help Center</Link></li>
               <li><Link to="/support" className="hover:opacity-100 transition">How to Buy</Link></li>
-              <li><Link to="/support" className="hover:opacity-100 transition">Returns & Refunds</Link></li>
+              <li><Link to="/refund-policy" className="hover:opacity-100 transition">Returns & Refunds</Link></li>
               <li><Link to="/support" className="hover:opacity-100 transition">Contact Us</Link></li>
-              <li><Link to="/support" className="hover:opacity-100 transition">Terms & Conditions</Link></li>
+              <li><Link to="/my-orders" className="hover:opacity-100 transition">Track Order</Link></li>
             </ul>
           </div>
 
-          {/* Quick Links */}
+          {/* Legal */}
           <div>
-            <h4 className="font-heading font-semibold text-lg mb-4">{branding.store_name}</h4>
+            <h4 className="font-heading font-semibold text-lg mb-4">Legal</h4>
             <ul className="space-y-2.5 text-sm opacity-70">
               <li><Link to="/about-us" className="hover:opacity-100 transition">About Us</Link></li>
-              <li><Link to="/shop" className="hover:opacity-100 transition">Shop All</Link></li>
-              <li><Link to="/categories" className="hover:opacity-100 transition">Categories</Link></li>
-              <li><Link to="/support" className="hover:opacity-100 transition">Privacy Policy</Link></li>
-              <li><Link to="/support" className="hover:opacity-100 transition">Blog</Link></li>
+              <li><Link to="/terms" className="hover:opacity-100 transition">Terms of Service</Link></li>
+              <li><Link to="/privacy" className="hover:opacity-100 transition">Privacy Policy</Link></li>
+              <li><Link to="/shipping-policy" className="hover:opacity-100 transition">Shipping Policy</Link></li>
+              <li><Link to="/refund-policy" className="hover:opacity-100 transition">Refund Policy</Link></li>
             </ul>
           </div>
 

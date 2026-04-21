@@ -33,6 +33,7 @@ import AboutUs from "./pages/AboutUs";
 import UserSettings from "./pages/UserSettings";
 import NotFound from "./pages/NotFound";
 import ResetPassword from "./pages/ResetPassword";
+import LegalPage from "./pages/LegalPage";
 import ReviewPromptDialog from "./components/storefront/ReviewPromptDialog";
 
 const queryClient = new QueryClient();
@@ -61,6 +62,10 @@ const App = () => (
               <Route path="/support" element={<Support />} />
               <Route path="/about-us" element={<AboutUs />} />
               <Route path="/settings" element={<UserSettings />} />
+              <Route path="/terms" element={<LegalPage pageKey="terms" />} />
+              <Route path="/privacy" element={<LegalPage pageKey="privacy" />} />
+              <Route path="/shipping-policy" element={<LegalPage pageKey="shipping" />} />
+              <Route path="/refund-policy" element={<LegalPage pageKey="refund" />} />
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<Dashboard />} />
                 <Route path="products" element={<Products />} />
