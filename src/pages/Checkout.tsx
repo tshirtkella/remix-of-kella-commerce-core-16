@@ -167,6 +167,39 @@ const Checkout = () => {
     country: "Bangladesh",
   });
 
+  // Apply a saved address to the form
+  const applySavedAddress = (addrId: string) => {
+    const addr = savedAddresses.find((a: any) => a.id === addrId);
+    if (!addr) return;
+    setSelectedAddressId(addrId);
+    const [first, ...rest] = (addr.full_name || "").trim().split(/\s+/);
+    setForm((prev) => ({
+      ...prev,
+      firstName: first || prev.firstName,
+      lastName: rest.join(" ") || prev.lastName,
+      address: [addr.address_line1, addr.address_line2].filter(Boolean).join(", "),
+      city: addr.city || "",
+      zip: addr.zip || "",
+      country: addr.country || "Bangladesh",
+      phone: addr.phone || prev.phone,
+    }));
+    // Clear related field errors
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      ["firstName", "lastName", "address", "city", "phone"].forEach((k) => delete next[k]);
+      return next;
+    });
+  };
+
+  // Auto-select default address when addresses load
+  useEffect(() => {
+    if (!selectedAddressId && savedAddresses.length > 0) {
+      const def = savedAddresses.find((a: any) => a.is_default) || savedAddresses[0];
+      if (def) applySavedAddress(def.id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [savedAddresses.length]);
+
   // Debounced draft saving
   const debouncedSaveDraft = useCallback((formData: Record<string, string>, pm: string) => {
     if (draftTimerRef.current) clearTimeout(draftTimerRef.current);
