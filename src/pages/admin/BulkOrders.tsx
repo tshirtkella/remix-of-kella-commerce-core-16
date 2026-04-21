@@ -25,14 +25,14 @@ const BulkOrders = () => {
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ["admin-bulk-orders"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("bulk_orders").select("*").order("created_at", { ascending: false });
+      const { data, error } = await (supabase.from("bulk_orders") as any).select("*").order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+      return data as any[];
     },
   });
 
   const updateStatus = async (id: string, status: string) => {
-    const { error } = await supabase.from("bulk_orders").update({ status }).eq("id", id);
+    const { error } = await (supabase.from("bulk_orders") as any).update({ status }).eq("id", id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Status updated" });
     qc.invalidateQueries({ queryKey: ["admin-bulk-orders"] });
@@ -41,7 +41,7 @@ const BulkOrders = () => {
 
   const deleteOrder = async (id: string) => {
     if (!confirm("Delete this bulk order request?")) return;
-    const { error } = await supabase.from("bulk_orders").delete().eq("id", id);
+    const { error } = await (supabase.from("bulk_orders") as any).delete().eq("id", id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Deleted" });
     qc.invalidateQueries({ queryKey: ["admin-bulk-orders"] });
