@@ -271,12 +271,19 @@ const StoreHeader = () => {
 
             {/* Mega Menu */}
             <div
+              ref={megaMenuRef}
               className="relative"
-              onMouseEnter={() => setShowCategories(true)}
-              onMouseLeave={() => setShowCategories(false)}
+              onMouseEnter={openMega}
+              onMouseLeave={scheduleCloseMega}
             >
-              <button className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors px-3 py-1.5 rounded hover:bg-muted flex items-center gap-1 whitespace-nowrap">
-                Shop by Category <ChevronDown className="h-3 w-3" />
+              <button
+                type="button"
+                aria-haspopup="true"
+                aria-expanded={showCategories}
+                onClick={() => setShowCategories((v) => !v)}
+                className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors px-3 py-1.5 rounded hover:bg-muted flex items-center gap-1 whitespace-nowrap"
+              >
+                Shop by Category <ChevronDown className={`h-3 w-3 transition-transform ${showCategories ? "rotate-180" : ""}`} />
               </button>
               {showCategories && categories.length > 0 && (
                 <div className="absolute top-full left-0 bg-popover border border-border rounded-lg shadow-2xl z-50 w-[560px] p-5">
