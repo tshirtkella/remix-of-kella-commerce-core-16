@@ -267,6 +267,9 @@ const ProductDetail = () => {
                 title={product.name}
                 description={product.description ?? undefined}
                 image={images[0]?.url}
+                productId={product.id}
+                productSlug={product.slug}
+                productName={product.name}
               />
               <button className="text-muted-foreground hover:text-destructive transition p-2 rounded-md hover:bg-muted/50" aria-label="Add to wishlist"><Heart className="h-5 w-5" /></button>
             </div>
