@@ -137,9 +137,11 @@ const Shop = () => {
           <h1 className="text-2xl sm:text-3xl font-bold font-heading">
             {searchQuery
               ? `Results for "${searchQuery}"`
-              : categorySlug
-                ? categories.find((c) => c.slug === categorySlug)?.name ?? "Shop"
-                : content?.heading || "All Products"}
+              : discountedOnly
+                ? "🔥 Sale — Discounted Products"
+                : categorySlug
+                  ? categories.find((c) => c.slug === categorySlug)?.name ?? "Shop"
+                  : content?.heading || "All Products"}
           </h1>
           <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground hidden sm:inline">{products.length} products</span>
