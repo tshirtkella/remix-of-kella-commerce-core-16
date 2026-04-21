@@ -3,10 +3,12 @@ import { Link } from "react-router-dom";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Minus, Plus, ShoppingCart } from "lucide-react";
+import { Minus, Plus, ShoppingCart, Star, Heart, Share2, Clock, Truck, ShieldCheck, RotateCcw, AlertTriangle } from "lucide-react";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useCart } from "@/hooks/useCart";
 import { useToast } from "@/hooks/use-toast";
+import { useWishlist } from "@/hooks/useWishlist";
+import { useAuth } from "@/hooks/useAuth";
 
 interface QuickViewDialogProps {
   product: any;
@@ -18,6 +20,8 @@ const QuickViewDialog = ({ product, open, onOpenChange }: QuickViewDialogProps) 
   const { format } = useCurrency();
   const { addItem } = useCart();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { isWished, toggle } = useWishlist();
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -49,6 +53,12 @@ const QuickViewDialog = ({ product, open, onOpenChange }: QuickViewDialogProps) 
   const stock = selectedVariant?.inventory_quantity ?? null;
   const image = product?.images?.sort((a: any, b: any) => a.position - b.position)?.[0];
   const totalStock = product?.variants?.reduce((s: number, v: any) => s + v.inventory_quantity, 0) ?? 0;
+  const deliveryHours = new Date().getHours() < 14 ? "today" : "tomorrow";
+  const wished = product ? isWished(product.id) : false;
+
+  // Stub rating (matches ProductCard behaviour)
+  const rating = 4.2;
+  const reviewCount = useMemo(() => Math.floor((product?.id?.charCodeAt?.(0) ?? 30) % 50) + 5, [product?.id]);
 
   const handleAdd = () => {
     if (!selectedSize) { toast({ title: "Please select a size", variant: "destructive" }); return; }
@@ -73,15 +83,34 @@ const QuickViewDialog = ({ product, open, onOpenChange }: QuickViewDialogProps) 
     }
   };
 
+  const handleWishlist = () => {
+    if (!user) { toast({ title: "Please login first", variant: "destructive" }); return; }
+    toggle(product.id);
+  };
+
+  const handleShare = async () => {
+    const url = `${window.location.origin}/product/${product.slug}`;
+    if (navigator.share) {
+      try { await navigator.share({ title: product.name, url }); } catch {}
+    } else {
+      await navigator.clipboard.writeText(url);
+      toast({ title: "Link copied!" });
+    }
+  };
+
   if (!product) return null;
+
+  const finalPrice = product.discount_percentage > 0
+    ? Number(displayPrice) * (1 - product.discount_percentage / 100)
+    : Number(displayPrice);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg p-0 overflow-hidden">
+      <DialogContent className="max-w-2xl p-0 overflow-hidden">
         <DialogTitle className="sr-only">{product.name}</DialogTitle>
-        <div className="flex flex-col sm:flex-row">
+        <div className="flex flex-col sm:flex-row max-h-[90vh]">
           {/* Image */}
-          <div className="sm:w-1/2 aspect-square bg-muted/30 relative">
+          <div className="sm:w-1/2 aspect-square bg-muted/30 relative shrink-0">
             {image?.url ? (
               <img src={image.url} alt={product.name} className="w-full h-full object-cover" />
             ) : (
@@ -90,40 +119,89 @@ const QuickViewDialog = ({ product, open, onOpenChange }: QuickViewDialogProps) 
             {totalStock === 0 && (
               <Badge className="absolute top-2 left-2 bg-destructive text-destructive-foreground text-xs">SOLD OUT</Badge>
             )}
+            {product.discount_percentage > 0 && totalStock > 0 && (
+              <Badge className="absolute top-2 left-2 bg-destructive text-destructive-foreground text-xs">
+                -{product.discount_percentage}%
+              </Badge>
+            )}
           </div>
 
           {/* Info */}
-          <div className="sm:w-1/2 p-5 space-y-3 max-h-[80vh] overflow-y-auto">
+          <div className="sm:w-1/2 p-5 space-y-3 overflow-y-auto">
             <Link to={`/product/${product.slug}`} onClick={() => onOpenChange(false)} className="text-lg font-bold font-heading hover:text-primary transition line-clamp-2 block">
               {product.name}
             </Link>
 
+            {/* Rating */}
+            <div className="flex items-center gap-2">
+              <div className="flex items-center">
+                {[1, 2, 3, 4, 5].map((s) => (
+                  <Star key={s} className={`h-3.5 w-3.5 ${s <= Math.round(rating) ? "text-amber-400 fill-amber-400" : "text-muted-foreground/30"}`} aria-hidden="true" />
+                ))}
+              </div>
+              <span className="text-xs text-muted-foreground">{rating.toFixed(1)} ({reviewCount} reviews)</span>
+            </div>
+
+            {/* Action icons */}
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleShare}
+                aria-label="Share product"
+                className="text-muted-foreground hover:text-foreground transition focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded p-1">
+                <Share2 className="h-4 w-4" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                onClick={handleWishlist}
+                aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
+                aria-pressed={wished}
+                className="text-muted-foreground hover:text-destructive transition focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded p-1">
+                <Heart className={`h-4 w-4 ${wished ? "fill-red-500 text-red-500" : ""}`} aria-hidden="true" />
+              </button>
+            </div>
+
             {product.categories?.name && (
               <p className="text-xs text-muted-foreground">
-                Category: <span className="text-foreground">{product.categories.name}</span>
+                Brand: <Link to={`/shop?category=${product.categories.slug}`} onClick={() => onOpenChange(false)} className="text-primary hover:underline">{product.categories.name}</Link>
               </p>
             )}
 
+            {/* Price */}
             {product.discount_percentage > 0 ? (
               <div>
-                <p className="text-xl font-bold text-primary">{format(Number(displayPrice) * (1 - product.discount_percentage / 100))}</p>
+                <p className="text-2xl font-bold text-primary">{format(finalPrice)}</p>
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-muted-foreground line-through">{format(Number(displayPrice))}</span>
-                  <Badge className="bg-destructive/10 text-destructive border-0 text-xs">-{product.discount_percentage}%</Badge>
+                  <span className="text-xs text-destructive font-semibold">
+                    Save {format(Number(displayPrice) - finalPrice)}
+                  </span>
                 </div>
               </div>
             ) : (
-              <p className="text-xl font-bold text-primary">{format(Number(displayPrice))}</p>
+              <p className="text-2xl font-bold text-primary">{format(Number(displayPrice))}</p>
             )}
+
+            {/* Urgency */}
+            {totalStock > 0 && totalStock <= 10 && (
+              <div className="flex items-center gap-2 text-xs bg-amber-500/10 text-amber-700 dark:text-amber-400 px-2.5 py-1.5 rounded border border-amber-500/20">
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                <span className="font-medium">Only {totalStock} left — order soon!</span>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>Order within <span className="font-semibold text-foreground">2 hours</span> for delivery {deliveryHours}</span>
+            </div>
 
             {product.description && (
-              <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">{product.description}</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">{product.description}</p>
             )}
 
-            {totalStock > 0 && (
-              <p className="text-xs text-muted-foreground">
-                In stock: <span className="font-semibold text-foreground">{totalStock} units</span>
-              </p>
+            {/* SKU */}
+            {selectedVariant?.sku && (
+              <p className="text-[11px] text-muted-foreground">SKU: <span className="text-foreground font-mono">{selectedVariant.sku}</span></p>
             )}
 
             {/* Color */}
@@ -171,7 +249,10 @@ const QuickViewDialog = ({ product, open, onOpenChange }: QuickViewDialogProps) 
                   })}
                 </div>
                 {stock !== null && stock > 0 && stock < 5 && (
-                  <p className="text-xs text-amber-600 mt-1">Only {stock} left!</p>
+                  <p className="text-xs text-amber-600 mt-1">Only {stock} left in this size!</p>
+                )}
+                {stock === 0 && (
+                  <p className="text-xs text-destructive mt-1">This variant is out of stock</p>
                 )}
               </div>
             )}
@@ -204,6 +285,22 @@ const QuickViewDialog = ({ product, open, onOpenChange }: QuickViewDialogProps) 
                 <ShoppingCart className="h-4 w-4 mr-2" aria-hidden="true" />
                 {totalStock === 0 ? "Out of Stock" : "Add to Cart"}
               </Button>
+            </div>
+
+            {/* Trust badges */}
+            <div className="grid grid-cols-3 gap-2 pt-3 border-t border-border">
+              <div className="flex flex-col items-center text-center gap-1">
+                <Truck className="h-4 w-4 text-primary" aria-hidden="true" />
+                <span className="text-[10px] text-muted-foreground leading-tight">Fast Delivery</span>
+              </div>
+              <div className="flex flex-col items-center text-center gap-1">
+                <RotateCcw className="h-4 w-4 text-primary" aria-hidden="true" />
+                <span className="text-[10px] text-muted-foreground leading-tight">Easy Returns</span>
+              </div>
+              <div className="flex flex-col items-center text-center gap-1">
+                <ShieldCheck className="h-4 w-4 text-primary" aria-hidden="true" />
+                <span className="text-[10px] text-muted-foreground leading-tight">Secure Payment</span>
+              </div>
             </div>
 
             <Link to={`/product/${product.slug}`} onClick={() => onOpenChange(false)} className="block text-xs text-primary hover:underline text-center pt-1">
