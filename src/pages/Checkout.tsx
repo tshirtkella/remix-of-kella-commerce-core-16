@@ -418,7 +418,52 @@ const Checkout = () => {
 
             {/* Delivery */}
             <section className="space-y-4">
-              <h2 className="text-lg font-semibold">Delivery</h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Delivery</h2>
+                {user && (
+                  <Link to="/shipping-address" className="text-xs text-primary hover:underline">Manage addresses</Link>
+                )}
+              </div>
+
+              {user && savedAddresses.length > 0 && (
+                <div className="space-y-2 rounded-lg border border-border bg-muted/30 p-3">
+                  <p className="text-xs font-semibold text-foreground">Use a saved address</p>
+                  <RadioGroup value={selectedAddressId} onValueChange={applySavedAddress} className="space-y-2">
+                    {savedAddresses.map((addr: any) => (
+                      <label
+                        key={addr.id}
+                        htmlFor={`addr-${addr.id}`}
+                        className={`flex items-start gap-3 rounded-md border bg-card p-3 cursor-pointer transition ${
+                          selectedAddressId === addr.id ? "border-primary ring-1 ring-primary" : "border-border hover:border-primary/40"
+                        }`}
+                      >
+                        <RadioGroupItem id={`addr-${addr.id}`} value={addr.id} className="mt-0.5" />
+                        <div className="flex-1 min-w-0 text-sm">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{addr.label || "Address"}</span>
+                            {addr.is_default && <Badge variant="secondary" className="text-[10px] py-0 h-4">Default</Badge>}
+                          </div>
+                          {addr.full_name && <p className="text-xs text-muted-foreground">{addr.full_name}</p>}
+                          <p className="text-xs text-muted-foreground line-clamp-2">
+                            {[addr.address_line1, addr.address_line2, addr.city, addr.zip, addr.country].filter(Boolean).join(", ")}
+                          </p>
+                          {addr.phone && <p className="text-xs text-muted-foreground">📞 {addr.phone}</p>}
+                        </div>
+                      </label>
+                    ))}
+                  </RadioGroup>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedAddressId("");
+                      setForm((prev) => ({ ...prev, firstName: "", lastName: "", address: "", city: "", zip: "", phone: "" }));
+                    }}
+                    className="text-xs text-muted-foreground hover:text-primary underline"
+                  >
+                    + Use a different address
+                  </button>
+                </div>
+              )}
 
               <div>
                 <Label className="text-xs text-muted-foreground">Country/Region</Label>
