@@ -24,14 +24,41 @@ const openShareWindow = (shareUrl: string) => {
   window.open(shareUrl, "_blank", "noopener,noreferrer,width=600,height=600");
 };
 
-const ShareButton = ({ url, title, description, variant = "full", className }: ShareButtonProps) => {
+const ShareButton = ({
+  url,
+  title,
+  description,
+  variant = "full",
+  className,
+  productId,
+  productSlug,
+  productName,
+}: ShareButtonProps) => {
   const { toast } = useToast();
   const { store_name } = useBranding();
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const pitch = `Check out this ${title} on ${store_name}!`;
   const shareText = description ? `${pitch} — ${description}` : pitch;
+
+  const trackShare = (network: string, action: "click" | "copy" | "native") => {
+    // Fire-and-forget; never block the user flow
+    supabase
+      .from("share_events")
+      .insert({
+        product_id: productId ?? null,
+        product_slug: productSlug ?? null,
+        product_name: productName ?? title,
+        network,
+        action,
+        url,
+        user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
+        user_id: user?.id ?? null,
+      })
+      .then(() => {});
+  };
 
   const handleNativeShare = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -39,6 +66,7 @@ const ShareButton = ({ url, title, description, variant = "full", className }: S
     if (typeof navigator !== "undefined" && (navigator as any).share) {
       try {
         await (navigator as any).share({ title, text: pitch, url });
+        trackShare("native", "native");
         return;
       } catch {
         // User cancelled or failed — fall through to popover
@@ -51,6 +79,7 @@ const ShareButton = ({ url, title, description, variant = "full", className }: S
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
+      trackShare("copy_link", "copy");
       toast({ title: "Link copied!", description: "Share it anywhere you like." });
       setTimeout(() => setCopied(false), 2000);
     } catch {
