@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Shirt, ShoppingBag, User, Shield, Search, Menu, X, ChevronDown, Phone } from "lucide-react";
+import { Shirt, ShoppingBag, User, Shield, Search, Menu, X, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,7 +17,6 @@ const StoreHeader = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [showCategories, setShowCategories] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const topBarContent = usePageSection("home", "top_bar");
@@ -58,18 +57,12 @@ const StoreHeader = () => {
     staleTime: 10_000,
   });
 
-  const megaMenuRef = useRef<HTMLDivElement>(null);
-  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Close suggestions + mega menu on outside click/touch
+  // Close suggestions on outside click/touch
   useEffect(() => {
     const handler = (e: Event) => {
       const target = e.target as Node;
       if (searchRef.current && !searchRef.current.contains(target)) {
         setShowSuggestions(false);
-      }
-      if (megaMenuRef.current && !megaMenuRef.current.contains(target)) {
-        setShowCategories(false);
       }
     };
     document.addEventListener("mousedown", handler);
@@ -79,15 +72,6 @@ const StoreHeader = () => {
       document.removeEventListener("touchstart", handler);
     };
   }, []);
-
-  const openMega = () => {
-    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-    setShowCategories(true);
-  };
-  const scheduleCloseMega = () => {
-    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-    closeTimerRef.current = setTimeout(() => setShowCategories(false), 150);
-  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,11 +85,6 @@ const StoreHeader = () => {
   const hasSuggestions = (searchResults?.products?.length || 0) > 0 || (searchResults?.categories?.length || 0) > 0;
   const callPhone = topBarContent?.call_phone || "";
   const callHours = topBarContent?.call_hours || "";
-
-  // Split categories into 2 columns for mega menu
-  const half = Math.ceil(categories.length / 2);
-  const catCol1 = categories.slice(0, half);
-  const catCol2 = categories.slice(half);
 
   return (
     <header className="sticky top-0 z-40">
