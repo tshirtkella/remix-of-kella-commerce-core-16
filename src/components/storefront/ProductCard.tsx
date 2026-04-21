@@ -141,6 +141,9 @@ const ProductCard = ({ product, compact = false }: ProductCardProps) => {
                 title={product.name}
                 description={product.description ?? undefined}
                 image={product.images?.sort((a: any, b: any) => a.position - b.position)?.[0]?.url}
+                productId={product.id}
+                productSlug={product.slug}
+                productName={product.name}
               />
               <button
                 onClick={handleQuickAdd}

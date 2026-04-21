@@ -142,6 +142,9 @@ const QuickViewDialog = ({ product, open, onOpenChange }: QuickViewDialogProps) 
                 title={product.name}
                 description={product.description ?? undefined}
                 image={image?.url}
+                productId={product.id}
+                productSlug={product.slug}
+                productName={product.name}
               />
               <button
                 type="button"
