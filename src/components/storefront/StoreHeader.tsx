@@ -97,7 +97,7 @@ const StoreHeader = () => {
             </span>
             <Link to="/support" className="hover:underline sm:hidden">Help</Link>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             {callPhone && (
               <a href={`tel:${callPhone.replace(/\s/g, "")}`} className="hidden md:flex items-center gap-1 hover:underline font-medium">
                 <Phone className="h-3 w-3" />
@@ -107,14 +107,14 @@ const StoreHeader = () => {
             )}
             {user ? (
               <>
-                <Link to="/profile" className="hover:underline">My Account</Link>
-                <Link to="/my-orders" className="hover:underline">My Orders</Link>
+                <Link to="/profile" className="hover:underline hidden sm:inline">My Account</Link>
+                <Link to="/my-orders" className="hover:underline hidden sm:inline">My Orders</Link>
                 <button onClick={() => void signOut()} className="hover:underline">Logout</button>
               </>
             ) : (
               <>
                 <Link to="/login" className="hover:underline font-semibold">Login</Link>
-                <Link to="/login" className="hover:underline font-semibold">Sign Up</Link>
+                <Link to="/login" className="hover:underline font-semibold hidden xs:inline sm:inline">Sign Up</Link>
               </>
             )}
           </div>
@@ -124,9 +124,9 @@ const StoreHeader = () => {
       {/* Main header */}
       <div className="bg-card/95 backdrop-blur-lg border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-4 h-14">
+          <div className="flex items-center gap-2 sm:gap-4 h-14">
             {/* Mobile menu toggle */}
-            <button className="lg:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+            <button className="lg:hidden shrink-0" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Menu">
               {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
 
@@ -143,7 +143,7 @@ const StoreHeader = () => {
             </Link>
 
             {/* Central Search Bar with suggestions */}
-            <div ref={searchRef} className="flex-1 max-w-2xl mx-auto relative">
+            <div ref={searchRef} className="flex-1 min-w-0 max-w-2xl mx-auto relative">
               <form onSubmit={handleSearch}>
                 <div className="flex items-center">
                   <Input

@@ -145,9 +145,69 @@ const Shop = () => {
           </h1>
           <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground hidden sm:inline">{products.length} products</span>
-            <Button variant="outline" size="sm" className="lg:hidden gap-2" onClick={() => setShowFilters(!showFilters)}>
-              <Filter className="h-4 w-4" /> Filters
-            </Button>
+            <Sheet open={showFilters} onOpenChange={setShowFilters}>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="sm" className="lg:hidden gap-2">
+                  <Filter className="h-4 w-4" /> Filters
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[85vw] max-w-sm overflow-y-auto">
+                <SheetHeader>
+                  <SheetTitle>Filters</SheetTitle>
+                </SheetHeader>
+                <div className="space-y-6 mt-4">
+                  {hasActiveFilters && (
+                    <button onClick={clearFilters} className="text-xs text-destructive hover:underline flex items-center gap-1">
+                      <X className="h-3 w-3" /> Clear all
+                    </button>
+                  )}
+                  <div>
+                    <p className="text-xs font-semibold mb-2 text-muted-foreground">Sort By</p>
+                    <Select value={sortBy} onValueChange={setSortBy}>
+                      <SelectTrigger className="h-10 text-sm"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="newest">Newest</SelectItem>
+                        <SelectItem value="price_low">Price: Low to High</SelectItem>
+                        <SelectItem value="price_high">Price: High to Low</SelectItem>
+                        <SelectItem value="popular">Most Popular</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold mb-2 text-muted-foreground">Price Range</p>
+                    <Slider min={0} max={50000} step={100} value={priceRange} onValueChange={(v) => setPriceRange(v as [number, number])} className="mb-2" />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>৳{priceRange[0]}</span>
+                      <span>৳{priceRange[1]}</span>
+                    </div>
+                  </div>
+                  {allColors.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold mb-2 text-muted-foreground">Color</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {allColors.map((c) => (
+                          <button key={c} onClick={() => toggleColor(c)} className={`px-3 py-1.5 rounded-full border text-xs font-medium transition ${selectedColors.includes(c) ? "border-primary bg-primary/10 text-primary" : "border-border text-foreground hover:border-primary/50"}`}>
+                            {c}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {allSizes.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold mb-2 text-muted-foreground">Size</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {allSizes.map((s) => (
+                          <button key={s} onClick={() => toggleSize(s)} className={`min-w-[40px] px-2.5 py-1.5 rounded border text-xs font-medium transition ${selectedSizes.includes(s) ? "border-primary bg-primary/10 text-primary" : "border-border text-foreground hover:border-primary/50"}`}>
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
 
@@ -166,8 +226,8 @@ const Shop = () => {
         </div>
 
         <div className="flex gap-6">
-          {/* Sidebar Filters */}
-          <aside className={`shrink-0 w-56 space-y-6 ${showFilters ? "block" : "hidden lg:block"}`}>
+          {/* Sidebar Filters - desktop only */}
+          <aside className="shrink-0 w-56 space-y-6 hidden lg:block">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold uppercase text-muted-foreground">Filters</h3>
               {hasActiveFilters && (
@@ -240,12 +300,12 @@ const Shop = () => {
           </aside>
 
           {/* Product grid */}
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             {/* Mobile sort */}
             <div className="flex items-center justify-between mb-4 lg:hidden">
               <span className="text-sm text-muted-foreground">{products.length} products</span>
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="h-8 w-40 text-xs">
+                <SelectTrigger className="h-9 w-40 text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -257,7 +317,7 @@ const Shop = () => {
               </Select>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
               {products.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
