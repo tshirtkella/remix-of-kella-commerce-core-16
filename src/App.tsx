@@ -25,6 +25,7 @@ import PromoCodes from "./pages/admin/PromoCodes";
 import AbandonedCheckouts from "./pages/admin/AbandonedCheckouts";
 import Inventory from "./pages/admin/Inventory";
 import Templates from "./pages/admin/Templates";
+import BulkOrders from "./pages/admin/BulkOrders";
 import Profile from "./pages/Profile";
 import MyOrders from "./pages/MyOrders";
 import ShippingAddress from "./pages/ShippingAddress";
@@ -79,6 +80,7 @@ const App = () => (
                 <Route path="abandoned" element={<AbandonedCheckouts />} />
                 <Route path="inventory" element={<Inventory />} />
                 <Route path="templates" element={<Templates />} />
+                <Route path="bulk-orders" element={<BulkOrders />} />
                 <Route path="settings" element={<Settings />} />
               </Route>
               <Route path="*" element={<NotFound />} />

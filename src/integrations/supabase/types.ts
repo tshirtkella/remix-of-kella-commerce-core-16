@@ -14,6 +14,77 @@ export type Database = {
   }
   public: {
     Tables: {
+      bulk_orders: {
+        Row: {
+          additional_notes: string | null
+          contact_number: string
+          created_at: string
+          custom_print: boolean
+          custom_print_details: string | null
+          custom_tag: boolean
+          custom_tag_details: string | null
+          email: string
+          full_name: string
+          id: string
+          order_purpose: string
+          order_purpose_other: string | null
+          product_categories: string[]
+          product_id: string | null
+          product_name: string | null
+          quantity_range: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          additional_notes?: string | null
+          contact_number: string
+          created_at?: string
+          custom_print?: boolean
+          custom_print_details?: string | null
+          custom_tag?: boolean
+          custom_tag_details?: string | null
+          email: string
+          full_name: string
+          id?: string
+          order_purpose: string
+          order_purpose_other?: string | null
+          product_categories?: string[]
+          product_id?: string | null
+          product_name?: string | null
+          quantity_range: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          additional_notes?: string | null
+          contact_number?: string
+          created_at?: string
+          custom_print?: boolean
+          custom_print_details?: string | null
+          custom_tag?: boolean
+          custom_tag_details?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          order_purpose?: string
+          order_purpose_other?: string | null
+          product_categories?: string[]
+          product_id?: string | null
+          product_name?: string | null
+          quantity_range?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bulk_orders_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           created_at: string

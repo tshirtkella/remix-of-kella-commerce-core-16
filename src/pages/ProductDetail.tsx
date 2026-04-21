@@ -15,6 +15,7 @@ import ProductDeliveryInfo from "@/components/storefront/ProductDeliveryInfo";
 import ProductReviews from "@/components/storefront/ProductReviews";
 import SizeGuideDialog from "@/components/storefront/SizeGuideDialog";
 import FrequentlyBoughtTogether from "@/components/storefront/FrequentlyBoughtTogether";
+import BulkOrderDialog from "@/components/storefront/BulkOrderDialog";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -29,6 +30,7 @@ const ProductDetail = () => {
   const [currentImage, setCurrentImage] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
+  const [bulkOpen, setBulkOpen] = useState(false);
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["product-detail", slug],
@@ -376,6 +378,21 @@ const ProductDetail = () => {
                 {stock === 0 ? "Out of Stock" : "Add to Cart"}
               </Button>
             </div>
+
+            {/* Bulk Order CTA */}
+            <Button
+              onClick={() => setBulkOpen(true)}
+              className="w-full h-12 text-sm font-bold bg-foreground text-background hover:bg-foreground/90"
+            >
+              Customize & Order in bulk
+            </Button>
+
+            <BulkOrderDialog
+              open={bulkOpen}
+              onOpenChange={setBulkOpen}
+              productId={product?.id}
+              productName={product?.name}
+            />
           </div>
 
           {/* Column 3: Delivery Info */}
