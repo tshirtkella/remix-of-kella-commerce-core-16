@@ -1,1 +1,4 @@
 project_id = "zidudryrqcmssfqyrrxf"
+
+[functions.notify-bulk-order]
+verify_jwt = false
