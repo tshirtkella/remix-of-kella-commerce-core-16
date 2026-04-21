@@ -12,7 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, ArrowLeft, Trash2, HelpCircle, Tag } from "lucide-react";
+import { Loader2, ArrowLeft, Trash2, HelpCircle, Tag, Lock, ShieldCheck, CheckCircle2, Wallet, BadgeCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import StoreHeader from "@/components/storefront/StoreHeader";
 import CheckoutChatWidget from "@/components/storefront/CheckoutChatWidget";
