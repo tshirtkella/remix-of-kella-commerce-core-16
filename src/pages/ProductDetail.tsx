@@ -79,6 +79,18 @@ const ProductDetail = () => {
     return [...product.images].sort((a: any, b: any) => a.position - b.position);
   }, [product]);
 
+  useProductMeta(
+    product
+      ? {
+          name: product.name,
+          description: (product as any).description,
+          image: (images[0] as any)?.url,
+          url: typeof window !== "undefined" ? `${window.location.origin}/product/${product.slug}` : undefined,
+          price: product.base_price,
+        }
+      : null,
+  );
+
   if (colors.length > 0 && !selectedColor) {
     setSelectedColor(colors[0] as string);
   }

@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useAuth } from "@/hooks/useAuth";
 import QuickViewDialog from "./QuickViewDialog";
+import ShareButton from "./ShareButton";
 
 interface ProductCardProps {
   product: any;
@@ -134,6 +135,13 @@ const ProductCard = ({ product, compact = false }: ProductCardProps) => {
               >
                 <Eye className="h-3.5 w-3.5" />
               </button>
+              <ShareButton
+                variant="icon"
+                url={`${typeof window !== "undefined" ? window.location.origin : ""}/product/${product.slug}`}
+                title={product.name}
+                description={product.description ?? undefined}
+                image={product.images?.sort((a: any, b: any) => a.position - b.position)?.[0]?.url}
+              />
               <button
                 onClick={handleQuickAdd}
                 className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:scale-110 transition"
