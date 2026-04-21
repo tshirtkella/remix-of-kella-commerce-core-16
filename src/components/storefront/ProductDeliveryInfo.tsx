@@ -3,12 +3,21 @@ import { Truck, ShieldCheck, RotateCcw, MapPin, Loader2, Plus } from "lucide-rea
 import { useCurrency } from "@/hooks/useCurrency";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+
+const POPULAR_CITIES = [
+  { city: "Dhaka", country: "Bangladesh" },
+  { city: "Chattogram", country: "Bangladesh" },
+  { city: "Sylhet", country: "Bangladesh" },
+  { city: "Khulna", country: "Bangladesh" },
+  { city: "Rajshahi", country: "Bangladesh" },
+  { city: "Barishal", country: "Bangladesh" },
+  { city: "Rangpur", country: "Bangladesh" },
+  { city: "Mymensingh", country: "Bangladesh" },
+];
 
 interface SavedAddress {
   id: string;
@@ -43,8 +52,6 @@ const ProductDeliveryInfo = () => {
   const [open, setOpen] = useState(false);
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
   const [fetching, setFetching] = useState(false);
-  const [city, setCity] = useState(location.city);
-  const [country, setCountry] = useState(location.country);
 
   const deliveryDate = new Date();
   deliveryDate.setDate(deliveryDate.getDate() + 7);
