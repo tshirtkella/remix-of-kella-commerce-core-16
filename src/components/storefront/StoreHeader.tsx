@@ -294,6 +294,7 @@ const StoreHeader = () => {
                         <Link
                           key={cat.id}
                           to={`/shop?category=${cat.slug}`}
+                          onClick={() => setShowCategories(false)}
                           className="flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-accent hover:text-primary transition group"
                         >
                           {cat.image_url ? (
@@ -311,6 +312,7 @@ const StoreHeader = () => {
                         <Link
                           key={cat.id}
                           to={`/shop?category=${cat.slug}`}
+                          onClick={() => setShowCategories(false)}
                           className="flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-accent hover:text-primary transition"
                         >
                           {cat.image_url ? (
