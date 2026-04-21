@@ -1,56 +1,42 @@
 
 
 ## Goal
-Redesign the **Payment** section on `/checkout` to look professional and trustworthy — proper logos, clear hierarchy, secure-payment badge, and consistent card styling. No backend / logic changes.
+Add a polished, branded **"Redirecting to secure payment…"** overlay that appears the moment the customer clicks **Pay now** with an online payment method, and stays visible until SSLCOMMERZ takes over. This makes the jump to the gateway feel intentional, secure, and on-brand instead of a sudden white-page redirect.
 
-## What changes (visual only)
+## What changes
 
-### `src/pages/Checkout.tsx` — Payment section (lines ~550-642)
+### 1. New component — `src/components/storefront/PaymentRedirectOverlay.tsx`
+Full-screen fixed overlay (z-[100]) with a soft blurred backdrop. Centered card containing:
+- Store logo (pulled from `useBranding`) at the top.
+- Animated lock + spinner combo (lock icon inside a slowly rotating ring).
+- Title: **"Redirecting to secure payment…"**
+- Subtitle: **"Please don't close or refresh this page."**
+- Small SSL trust row: 🔒 SSL Secured · 🛡 256-bit encryption · ✅ Verified gateway.
+- "Powered by SSLCOMMERZ" line (small, muted).
+- Indeterminate progress bar at the bottom of the card for visual progress feedback.
 
-**1. Section header**
-- Title "Payment" + small lock icon and the line "All transactions are secure and encrypted" moved beside the title in a single header row.
-- Add a small "SSL Secured" badge (lock icon + text) on the right.
+Props: `open: boolean`, `gatewayName?: string` (defaults to "SSLCOMMERZ"), so we can reuse it later for bKash / Nagad redirects.
 
-**2. Each payment option becomes a polished card row**
-Replace the current single bordered list with separate cards (rounded-xl, subtle shadow, 1px border, hover lift). Selected card: 2px primary border + soft primary tint + check icon on the right.
+Body scroll is locked while open. Overlay is non-dismissable (no close button) — it must stay until the actual redirect happens.
 
-Layout per row (left → right):
-```text
-[ radio ] [ logo box 56x40, white bg, border ] [ Title + subtitle ]      [ method badges ] [ check ]
-```
+### 2. Wire it into `src/pages/Checkout.tsx`
+- Add state `const [redirecting, setRedirecting] = useState(false);`
+- In `handlePlaceOrder`, when `paymentMethod` is one of `sslcommerz` / `bkash` / `nagad` (i.e. any non-COD online method), set `setRedirecting(true)` **before** the order-create network calls, so the overlay appears the instant the user clicks Pay now.
+- Keep the existing order-creation logic intact. Once the order is created and the redirect URL is available (currently the placeholder "coming soon" toast), the overlay stays mounted right up to `window.location.href = …`. If the flow falls back to COD (current behavior), still show the overlay for ~800 ms then hide it before the success toast — feels intentional, not jarring.
+- On error: hide the overlay (`setRedirecting(false)`) so the user can retry.
+- Render `<PaymentRedirectOverlay open={redirecting} />` at the bottom of the Checkout JSX.
 
-**3. Brand-correct logos (inline SVG, no external assets)**
-- **SSLCOMMERZ** → SSLCOMMERZ wordmark in brand navy.
-- **bKash** → pink (#E2136E) rounded badge with white "bKash" wordmark.
-- **Nagad** → orange (#F6921E) rounded badge with white "Nagad" wordmark.
-- **COD** → wallet/cash icon in a neutral square.
-
-**4. Method badges (right side, only for SSLCOMMERZ)**
-Replace the current colored "VISA / MC / AMEX / +2" pill chips with proper mini card-brand SVG logos in white pill containers with subtle border (Visa, Mastercard, Amex, Nexus, bKash). Keeps consistent height (h-5).
-
-**5. Expanded details panel (when selected)**
-- SSLCOMMERZ: light info banner with shield icon — "You'll be securely redirected to SSLCOMMERZ to complete payment."
-- COD: info banner — "Pay in cash when your order is delivered. Available across Bangladesh."
-- bKash / Nagad: keep admin-configured instructions but render them inside a clean info card with the brand color as a left accent bar (no account number / instructions for bKash if memory rule says hide — keep the existing conditional, just style it).
-
-**6. Trust strip below the payment list**
-Small horizontal row of three icon+text items:
-- 🔒 SSL Secured
-- 🛡️ Buyer Protection
-- ✅ Verified Gateway
-
-**7. "Pay now" button polish (line 687-699)**
-- Add a lock icon before the label when method is online.
-- Subtitle below button: "Your payment info is encrypted and never stored." (text-xs muted-foreground, centered).
+### 3. Pay-now button micro-polish
+- While `redirecting` is true, swap the button label to **"Securing your payment…"** with the spinner, and keep it disabled (in addition to the existing `isSubmitting`).
 
 ### Out of scope
-- No changes to payment processing logic, admin settings, or DB.
-- No new payment methods.
-- No changes outside the Payment section + Pay-now button.
+- No backend / SSLCOMMERZ integration changes. The screenshot shows SSLCOMMERZ already working in your environment — we're only improving the UI on our side before the redirect.
+- No changes to bKash / Nagad / COD logic.
+- No styling changes to the SSLCOMMERZ hosted page itself (that page is owned by SSLCOMMERZ and cannot be restyled by us; it is customized via the SSLCOMMERZ merchant panel).
 
-## File touched
-- `src/pages/Checkout.tsx` (only the Payment `<section>` and the Pay-now button block)
+## Files
+- `src/components/storefront/PaymentRedirectOverlay.tsx` (new)
+- `src/pages/Checkout.tsx` (add state, trigger overlay, button label)
 
 ## Expected result
-Professional, trust-building payment UI with real-looking gateway logos, clear selection states, secure-checkout cues, and a consistent card-based layout that matches modern e-commerce checkouts (Daraz / Shopify style).
-
+Clicking **Pay now** with an online method instantly shows a clean, branded "Redirecting to secure payment…" screen with your store logo, security badges, and an animated lock — then SSLCOMMERZ opens. The handoff feels professional and trustworthy instead of a blank flash.
