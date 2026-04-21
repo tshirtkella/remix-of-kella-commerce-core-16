@@ -12,7 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, ArrowLeft, Trash2, HelpCircle, Tag } from "lucide-react";
+import { Loader2, ArrowLeft, Trash2, HelpCircle, Tag, Lock, ShieldCheck, CheckCircle2, Wallet, BadgeCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import StoreHeader from "@/components/storefront/StoreHeader";
 import CheckoutChatWidget from "@/components/storefront/CheckoutChatWidget";
@@ -548,97 +548,202 @@ const Checkout = () => {
             <Separator />
 
             {/* Payment */}
-            <section className="space-y-3">
-              <h2 className="text-lg font-semibold">Payment</h2>
-              <p className="text-xs text-muted-foreground">All transactions are secure and encrypted.</p>
-              <RadioGroup value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)} className="space-y-0 border border-border rounded-lg overflow-hidden">
-                {enabledMethods.sslcommerz && (
-                  <>
-                    <label
-                      className={`flex items-center gap-3 p-4 cursor-pointer transition ${
-                        paymentMethod === "sslcommerz" ? "bg-primary/5 border-primary" : "hover:bg-muted/30"
-                      }`}
-                    >
-                      <RadioGroupItem value="sslcommerz" />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold">SSLCOMMERZ</span>
-                          <div className="flex gap-1">
-                            <span className="text-[10px] bg-primary text-primary-foreground px-1.5 py-0.5 rounded font-bold">VISA</span>
-                            <span className="text-[10px] bg-destructive text-destructive-foreground px-1.5 py-0.5 rounded font-bold">MC</span>
-                            <span className="text-[10px] bg-accent text-accent-foreground px-1.5 py-0.5 rounded font-bold">AMEX</span>
-                            <span className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded font-bold">+2</span>
-                          </div>
-                        </div>
-                      </div>
-                    </label>
-                    {paymentMethod === "sslcommerz" && (
-                      <div className="px-4 pb-4 bg-muted/20 border-t border-border">
-                        <p className="text-sm text-muted-foreground py-3">
-                          You'll be redirected to SSLCOMMERZ to complete your purchase.
-                        </p>
-                      </div>
-                    )}
-                  </>
-                )}
+            <section className="space-y-4">
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <div>
+                  <h2 className="text-lg font-semibold flex items-center gap-2">
+                    <Lock className="h-4 w-4 text-success" />
+                    Payment
+                  </h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    All transactions are secure and encrypted.
+                  </p>
+                </div>
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold bg-success/10 text-success border border-success/20 px-2.5 py-1 rounded-full">
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  SSL Secured
+                </span>
+              </div>
 
-                {enabledMethods.cod && (
-                  <label
-                    className={`flex items-center gap-3 p-4 cursor-pointer transition border-t border-border ${
-                      paymentMethod === "cod" ? "bg-primary/5 border-primary" : "hover:bg-muted/30"
+              <RadioGroup
+                value={paymentMethod}
+                onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}
+                className="space-y-2.5"
+              >
+                {enabledMethods.sslcommerz && (
+                  <div
+                    className={`rounded-xl border bg-card transition-all ${
+                      paymentMethod === "sslcommerz"
+                        ? "border-2 border-primary bg-primary/5 shadow-sm"
+                        : "border-border hover:border-primary/40 hover:shadow-sm"
                     }`}
                   >
-                    <RadioGroupItem value="cod" />
-                    <span className="text-sm font-medium">Cash on Delivery (COD)</span>
-                  </label>
+                    <label className="flex items-center gap-3 p-3.5 cursor-pointer">
+                      <RadioGroupItem value="sslcommerz" />
+                      <div className="h-10 w-14 bg-white border border-border rounded-md flex items-center justify-center shrink-0">
+                        <span className="text-[10px] font-black tracking-tight" style={{ color: "#0B3B7A" }}>SSL</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold leading-tight">Online Payment</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">Card, Mobile Banking, Net Banking</p>
+                      </div>
+                      <div className="hidden sm:flex items-center gap-1">
+                        <span className="h-5 px-1.5 inline-flex items-center bg-white border border-border rounded">
+                          <span className="text-[8px] font-black italic tracking-tight" style={{ color: "#1A1F71" }}>VISA</span>
+                        </span>
+                        <span className="h-5 px-1 inline-flex items-center bg-white border border-border rounded gap-0.5">
+                          <span className="h-2.5 w-2.5 rounded-full" style={{ background: "#EB001B" }} />
+                          <span className="h-2.5 w-2.5 rounded-full -ml-1.5" style={{ background: "#F79E1B", opacity: 0.9 }} />
+                        </span>
+                        <span className="h-5 px-1.5 inline-flex items-center rounded" style={{ background: "#2E77BC" }}>
+                          <span className="text-[8px] font-black text-white tracking-tight">AMEX</span>
+                        </span>
+                        <span className="h-5 px-1.5 inline-flex items-center rounded" style={{ background: "#E2136E" }}>
+                          <span className="text-[8px] font-black text-white">bKash</span>
+                        </span>
+                      </div>
+                      {paymentMethod === "sslcommerz" && (
+                        <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+                      )}
+                    </label>
+                    {paymentMethod === "sslcommerz" && (
+                      <div className="px-3.5 pb-3.5">
+                        <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/15">
+                          <ShieldCheck className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                          <p className="text-xs text-foreground/80 leading-relaxed">
+                            You'll be securely redirected to <span className="font-semibold">SSLCOMMERZ</span> to complete your payment.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
 
                 {enabledMethods.bkash && (
-                  <>
-                    <label
-                      className={`flex items-center gap-3 p-4 cursor-pointer transition border-t border-border ${
-                        paymentMethod === "bkash" ? "bg-primary/5 border-primary" : "hover:bg-muted/30"
-                      }`}
-                    >
+                  <div
+                    className={`rounded-xl border bg-card transition-all ${
+                      paymentMethod === "bkash"
+                        ? "border-2 border-primary bg-primary/5 shadow-sm"
+                        : "border-border hover:border-primary/40 hover:shadow-sm"
+                    }`}
+                  >
+                    <label className="flex items-center gap-3 p-3.5 cursor-pointer">
                       <RadioGroupItem value="bkash" />
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold" style={{ color: "#E2136E" }}>bKash</span>
-                        {enabledMethods.bkash_number && (
-                          <span className="text-xs text-muted-foreground">({enabledMethods.bkash_number})</span>
-                        )}
+                      <div className="h-10 w-14 rounded-md flex items-center justify-center shrink-0" style={{ background: "#E2136E" }}>
+                        <span className="text-white text-[13px] font-black tracking-tight">bKash</span>
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold leading-tight">bKash</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">Mobile financial service</p>
+                      </div>
+                      {paymentMethod === "bkash" && (
+                        <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+                      )}
                     </label>
                     {paymentMethod === "bkash" && enabledMethods.bkash_instructions && (
-                      <div className="px-4 pb-4 bg-muted/20 border-t border-border">
-                        <p className="text-sm text-muted-foreground py-3 whitespace-pre-line">{enabledMethods.bkash_instructions}</p>
+                      <div className="px-3.5 pb-3.5">
+                        <div className="rounded-lg bg-muted/40 border border-border overflow-hidden flex">
+                          <div className="w-1 shrink-0" style={{ background: "#E2136E" }} />
+                          <p className="text-xs text-foreground/80 leading-relaxed py-2.5 px-3 whitespace-pre-line">
+                            {enabledMethods.bkash_instructions}
+                          </p>
+                        </div>
                       </div>
                     )}
-                  </>
+                  </div>
                 )}
 
                 {enabledMethods.nagad && (
-                  <>
-                    <label
-                      className={`flex items-center gap-3 p-4 cursor-pointer transition border-t border-border ${
-                        paymentMethod === "nagad" ? "bg-primary/5 border-primary" : "hover:bg-muted/30"
-                      }`}
-                    >
+                  <div
+                    className={`rounded-xl border bg-card transition-all ${
+                      paymentMethod === "nagad"
+                        ? "border-2 border-primary bg-primary/5 shadow-sm"
+                        : "border-border hover:border-primary/40 hover:shadow-sm"
+                    }`}
+                  >
+                    <label className="flex items-center gap-3 p-3.5 cursor-pointer">
                       <RadioGroupItem value="nagad" />
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold" style={{ color: "#F6921E" }}>Nagad</span>
-                        {enabledMethods.nagad_number && (
-                          <span className="text-xs text-muted-foreground">({enabledMethods.nagad_number})</span>
-                        )}
+                      <div className="h-10 w-14 rounded-md flex items-center justify-center shrink-0" style={{ background: "#F6921E" }}>
+                        <span className="text-white text-[13px] font-black tracking-tight">Nagad</span>
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold leading-tight">Nagad</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">Mobile financial service</p>
+                      </div>
+                      {enabledMethods.nagad_number && (
+                        <span className="hidden sm:inline text-[11px] text-muted-foreground">
+                          {enabledMethods.nagad_number}
+                        </span>
+                      )}
+                      {paymentMethod === "nagad" && (
+                        <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+                      )}
                     </label>
                     {paymentMethod === "nagad" && enabledMethods.nagad_instructions && (
-                      <div className="px-4 pb-4 bg-muted/20 border-t border-border">
-                        <p className="text-sm text-muted-foreground py-3 whitespace-pre-line">{enabledMethods.nagad_instructions}</p>
+                      <div className="px-3.5 pb-3.5">
+                        <div className="rounded-lg bg-muted/40 border border-border overflow-hidden flex">
+                          <div className="w-1 shrink-0" style={{ background: "#F6921E" }} />
+                          <p className="text-xs text-foreground/80 leading-relaxed py-2.5 px-3 whitespace-pre-line">
+                            {enabledMethods.nagad_instructions}
+                          </p>
+                        </div>
                       </div>
                     )}
-                  </>
+                  </div>
+                )}
+
+                {enabledMethods.cod && (
+                  <div
+                    className={`rounded-xl border bg-card transition-all ${
+                      paymentMethod === "cod"
+                        ? "border-2 border-primary bg-primary/5 shadow-sm"
+                        : "border-border hover:border-primary/40 hover:shadow-sm"
+                    }`}
+                  >
+                    <label className="flex items-center gap-3 p-3.5 cursor-pointer">
+                      <RadioGroupItem value="cod" />
+                      <div className="h-10 w-14 bg-muted border border-border rounded-md flex items-center justify-center shrink-0">
+                        <Wallet className="h-5 w-5 text-foreground/70" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold leading-tight">Cash on Delivery</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">Pay when your order arrives</p>
+                      </div>
+                      {paymentMethod === "cod" && (
+                        <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+                      )}
+                    </label>
+                    {paymentMethod === "cod" && (
+                      <div className="px-3.5 pb-3.5">
+                        <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/40 border border-border">
+                          <Wallet className="h-4 w-4 text-foreground/70 mt-0.5 shrink-0" />
+                          <p className="text-xs text-foreground/80 leading-relaxed">
+                            Pay in cash when your order is delivered. Available across Bangladesh.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
               </RadioGroup>
+
+              {/* Trust strip */}
+              <div className="flex items-center justify-around gap-2 px-2 py-2.5 rounded-lg bg-muted/30 border border-border">
+                <div className="flex items-center gap-1.5 text-[11px] font-medium text-foreground/70">
+                  <Lock className="h-3.5 w-3.5 text-success" />
+                  SSL Secured
+                </div>
+                <div className="h-3 w-px bg-border" />
+                <div className="flex items-center gap-1.5 text-[11px] font-medium text-foreground/70">
+                  <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+                  Buyer Protection
+                </div>
+                <div className="h-3 w-px bg-border" />
+                <div className="flex items-center gap-1.5 text-[11px] font-medium text-foreground/70">
+                  <BadgeCheck className="h-3.5 w-3.5 text-success" />
+                  Verified Gateway
+                </div>
+              </div>
             </section>
 
             <Separator />
@@ -694,9 +799,16 @@ const Checkout = () => {
               ) : paymentMethod === "cod" ? (
                 "Place Order"
               ) : (
-                "Pay now"
+                <>
+                  <Lock className="h-4 w-4" />
+                  Pay now
+                </>
               )}
             </Button>
+            <p className="text-[11px] text-muted-foreground text-center -mt-2 flex items-center justify-center gap-1.5">
+              <ShieldCheck className="h-3 w-3 text-success" />
+              Your payment info is encrypted and never stored.
+            </p>
 
             {/* Footer links */}
             <div className="flex flex-wrap gap-4 text-xs text-muted-foreground pt-2 pb-8">
