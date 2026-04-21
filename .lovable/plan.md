@@ -1,46 +1,46 @@
 
 
-## Goal
-1. Remove **Shop by Category**, **Shop All**, **About Us**, **Support** from the desktop secondary nav bar.
-2. Make the whole site comfortably usable on small phones (down to 320 px), with proper tap targets and no horizontal scroll.
+## Root Cause: White Screen on Profile / MyOrders / etc.
 
-## Changes
+The auth hook (`src/hooks/useAuth.tsx`) gets stuck in `loading: true` after Supabase fires post-mount auth events (e.g. `TOKEN_REFRESHED`, `SIGNED_IN`, `USER_UPDATED`).
 
-### A. Header cleanup — `src/components/storefront/StoreHeader.tsx`
-- In the desktop secondary nav (lines 266–348), remove these links: **Shop by Category** (mega menu block), **Shop All**, **About Us**, **Support**. Keep: **Home**, **New Arrivals**, **SALE 🔥**.
-- Drop the now-unused state/refs: `showCategories`, `megaMenuRef`, `closeTimerRef`, `openMega`, `scheduleCloseMega`, `catCol1`, `catCol2`, `half`, `ChevronDown` import.
-- The mega-menu outside-click effect collapses to only handle search suggestions.
-- Mobile hamburger menu keeps the same items it has today (Home, Shop All, SALE, All Categories + category list, Support, About Us) so nothing becomes unreachable on phones.
-- Top-bar tweaks for tiny screens: shrink the right-side links gap (`gap-2 sm:gap-4`), let "Login / Sign Up" wrap to a single "Login" pill on `<360px` to avoid overflow.
-- Make the search bar honor small screens: `min-w-0` on the wrapper so flexbox can shrink it, and reduce its right padding on mobile.
+Sequence that breaks:
+1. Page mounts → `getSession()` resolves → `applySession()` sets `rolesLoading=true`, then the roles `useEffect` runs and flips it to `false`. ✅
+2. User navigates to `/profile`. Supabase fires `TOKEN_REFRESHED` (or `SIGNED_IN`) → `applySession()` runs again → **`rolesLoading` reset to `true`**.
+3. Roles `useEffect` depends on `[authReady, user?.id]`. Neither changed, so it **does not re-run**. → `rolesLoading` stays `true` forever → `loading` stays `true` → spinner forever = the white/loading screen.
 
-### B. Mobile responsiveness sweep
-Targeted, low-risk fixes — no visual redesign on desktop.
+Pages that gate with `if (loading) return <Spinner/>` (Profile, MyOrders, ShippingAddress, UserSettings, etc.) all hit this.
 
-1. **`src/index.css`** — add a global guard:
-   - `html, body { overflow-x: hidden; }`
-   - `img, video { max-width: 100%; height: auto; }`
-   - Bump default tap target: `button, a { touch-action: manipulation; }`
+A secondary symptom is the `QuickViewDialog` "function components cannot be given refs" console warning — non-blocking but noisy.
 
-2. **`src/pages/Storefront.tsx`** — verify all section paddings use `px-4 sm:px-6 lg:px-8` and stacks use `flex-col md:flex-row` (spot-fix any section that overflows on 360 px).
+## Fix Plan
 
-3. **`src/components/storefront/HeroSlider.tsx`** — cap height with `h-[280px] sm:h-[380px] md:h-[480px]`, ensure text uses `text-2xl sm:text-4xl` and CTA buttons are full-width on mobile.
+### A. `src/hooks/useAuth.tsx` — make auth state resilient
+1. **Stop resetting `rolesLoading` on every session event.** Only set it `true` when the user **id actually changes** (initial sign-in, sign-out, account switch). Token refresh / metadata update must not toggle the spinner.
+2. Track the previous user id in a ref; compare before deciding whether to mark roles as loading again.
+3. Add a **safety timeout** (e.g., 5 s) on the roles fetch — if the network query hangs, default to non-staff and clear loading rather than stalling the whole UI.
+4. Stop ignoring `INITIAL_SESSION` — let it flow through `applySession` consistently (but still avoid the reset described in #1).
+5. Add `console.warn` on roles fetch error so future stalls are visible during dev.
 
-4. **`src/components/storefront/CategoryCarousel.tsx` / `CategoriesGrid.tsx` / `JustForYou.tsx` / `FlashSale.tsx`** — ensure grids use `grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5` and card text is `text-xs sm:text-sm` to avoid truncation.
+### B. `src/pages/Profile.tsx` — don't block UI on auth roles
+- Keep gating on `if (!user)` redirect, but stop using the broad `loading` flag from `useAuth` to render a full-screen spinner. Show the page shell immediately and only spin inside the profile-data block (`profileLoading`). This way even if roles stall, the page still appears.
+- Same treatment for `src/pages/MyOrders.tsx`, `src/pages/ShippingAddress.tsx`, `src/pages/UserSettings.tsx`: render the layout, spin only inside the data area.
 
-5. **`src/components/storefront/ProductCard.tsx`** — make price/title not overflow: add `min-w-0`, `truncate` on name, wrap action row with `flex-wrap gap-1`.
-
-6. **`src/pages/ProductDetail.tsx`** — switch image+info from `grid-cols-2` to `grid-cols-1 md:grid-cols-2`; size/color buttons `flex-wrap`; sticky "Add to Cart" bar full-width on mobile.
-
-7. **`src/pages/Checkout.tsx`** — main grid `grid-cols-1 lg:grid-cols-3`; saved-address picker cards stack full width on mobile; form inputs `h-11` for easier tapping.
-
-8. **`src/pages/Shop.tsx`** — sidebar filters become a `Sheet` (drawer) on mobile via a "Filters" button; product grid `grid-cols-2 md:grid-cols-3 lg:grid-cols-4`.
-
-9. **`src/components/storefront/StoreFooter.tsx`** — columns `grid-cols-2 md:grid-cols-4`, reduce font to `text-xs sm:text-sm`, center social icons on mobile.
-
-10. **`src/components/storefront/CartDrawer.tsx`** — drawer width `w-full sm:max-w-md`; line items use `flex-col sm:flex-row` so qty controls don't squash the title.
+### C. `src/components/storefront/QuickViewDialog.tsx` — silence ref warning
+- The warning points to `Dialog`/`DialogContent`. Wrap the offending child in a `<span>` or ensure no ref is forwarded to a non-forwardRef element (likely an icon used as `asChild` trigger). Quick targeted fix; keeps console clean.
 
 ### Out of scope
-- No changes to admin pages (desktop-only by design).
-- No new pages or feature work — purely layout/CSS and the menubar removals.
+- No backend / RLS changes — policies are already correct.
+- No redesign of the profile / orders UI.
+
+## Files to edit
+- `src/hooks/useAuth.tsx`
+- `src/pages/Profile.tsx`
+- `src/pages/MyOrders.tsx`
+- `src/pages/ShippingAddress.tsx`
+- `src/pages/UserSettings.tsx`
+- `src/components/storefront/QuickViewDialog.tsx`
+
+## Expected result
+Clicking Profile, My Orders, Shipping Address, or Settings loads the page immediately. The brief spinner only appears in the data card while it fetches, and it always resolves — no more permanent loading / white screen after token refresh or returning to the tab.
 
