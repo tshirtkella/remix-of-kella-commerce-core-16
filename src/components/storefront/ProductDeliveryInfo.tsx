@@ -3,12 +3,21 @@ import { Truck, ShieldCheck, RotateCcw, MapPin, Loader2, Plus } from "lucide-rea
 import { useCurrency } from "@/hooks/useCurrency";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+
+const POPULAR_CITIES = [
+  { city: "Dhaka", country: "Bangladesh" },
+  { city: "Chattogram", country: "Bangladesh" },
+  { city: "Sylhet", country: "Bangladesh" },
+  { city: "Khulna", country: "Bangladesh" },
+  { city: "Rajshahi", country: "Bangladesh" },
+  { city: "Barishal", country: "Bangladesh" },
+  { city: "Rangpur", country: "Bangladesh" },
+  { city: "Mymensingh", country: "Bangladesh" },
+];
 
 interface SavedAddress {
   id: string;
@@ -43,8 +52,6 @@ const ProductDeliveryInfo = () => {
   const [open, setOpen] = useState(false);
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
   const [fetching, setFetching] = useState(false);
-  const [city, setCity] = useState(location.city);
-  const [country, setCountry] = useState(location.country);
 
   const deliveryDate = new Date();
   deliveryDate.setDate(deliveryDate.getDate() + 7);
@@ -69,11 +76,6 @@ const ProductDeliveryInfo = () => {
     return () => { cancelled = true; };
   }, [open, user]);
 
-  useEffect(() => {
-    setCity(location.city);
-    setCountry(location.country);
-  }, [location, open]);
-
   const persist = (next: { city: string; country: string }) => {
     setLocation(next);
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch {}
@@ -85,13 +87,9 @@ const ProductDeliveryInfo = () => {
     setOpen(false);
   };
 
-  const saveManual = () => {
-    if (!city.trim()) {
-      toast({ title: "Please enter a city", variant: "destructive" });
-      return;
-    }
-    persist({ city: city.trim(), country: country.trim() || "Bangladesh" });
-    toast({ title: "Delivery location updated" });
+  const pickCity = (c: { city: string; country: string }) => {
+    persist(c);
+    toast({ title: "Delivery location updated", description: `${c.city}, ${c.country}` });
     setOpen(false);
   };
 
@@ -195,18 +193,29 @@ const ProductDeliveryInfo = () => {
               </div>
             )}
 
-            {/* Manual entry — works for guests too */}
-            <div className="space-y-3">
+            {/* Popular cities — quick picker */}
+            <div className="space-y-2">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                {user ? "Or Enter Manually" : "Enter Your Location"}
+                {user && addresses.length > 0 ? "Or Pick a City" : "Popular Cities"}
               </p>
-              <div className="space-y-1.5">
-                <Label htmlFor="city" className="text-xs">City</Label>
-                <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="e.g. Dhaka" />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="country" className="text-xs">Country</Label>
-                <Input id="country" value={country} onChange={(e) => setCountry(e.target.value)} placeholder="e.g. Bangladesh" />
+              <div className="grid grid-cols-2 gap-1.5">
+                {POPULAR_CITIES.map((c) => {
+                  const active = location.city === c.city && location.country === c.country;
+                  return (
+                    <button
+                      key={c.city}
+                      type="button"
+                      onClick={() => pickCity(c)}
+                      className={`text-left px-3 py-2 rounded-lg border text-sm transition-colors ${
+                        active
+                          ? "border-primary bg-primary/5 text-primary font-medium"
+                          : "border-border hover:border-primary hover:bg-primary/5"
+                      }`}
+                    >
+                      {c.city}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -223,11 +232,6 @@ const ProductDeliveryInfo = () => {
               </p>
             )}
           </div>
-
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button onClick={saveManual}>Save</Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
