@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import StoreHeader from "@/components/storefront/StoreHeader";
 import CheckoutChatWidget from "@/components/storefront/CheckoutChatWidget";
 import StoreFooter from "@/components/storefront/StoreFooter";
+import PaymentRedirectOverlay from "@/components/storefront/PaymentRedirectOverlay";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 type ShippingZone = "inside_dhaka" | "sub_dhaka" | "outside_dhaka";
@@ -41,6 +42,7 @@ const Checkout = () => {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cod");
   const [billingOption, setBillingOption] = useState<BillingOption>("same");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
   const [discountCode, setDiscountCode] = useState("");
   const [appliedPromo, setAppliedPromo] = useState<{ code: string; discount_type: string; discount_value: number; id: string } | null>(null);
   const [promoLoading, setPromoLoading] = useState(false);
@@ -287,6 +289,8 @@ const Checkout = () => {
     }
 
     setIsSubmitting(true);
+    const isOnlinePayment = paymentMethod !== "cod";
+    if (isOnlinePayment) setRedirecting(true);
 
     try {
       const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
@@ -356,10 +360,18 @@ const Checkout = () => {
 
       await deleteDraft();
       clearCart();
+
+      // Brief intentional pause so the redirect overlay doesn't flash away
+      if (isOnlinePayment) {
+        await new Promise((r) => setTimeout(r, 800));
+        setRedirecting(false);
+      }
+
       toast({ title: "Order placed!", description: `Order #${orderNumber} confirmed.` });
       navigate("/");
     } catch (err: any) {
       console.error("Order error:", err);
+      setRedirecting(false);
       toast({ title: "Failed to place order", description: err.message, variant: "destructive" });
     } finally {
       setIsSubmitting(false);
@@ -654,9 +666,14 @@ const Checkout = () => {
             <Button
               className="w-full h-12 font-semibold text-base"
               onClick={handlePlaceOrder}
-              disabled={isSubmitting}
+              disabled={isSubmitting || redirecting}
             >
-              {isSubmitting ? (
+              {redirecting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Securing your payment…
+                </>
+              ) : isSubmitting ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : paymentMethod === "cod" ? (
                 "Place Order"
@@ -804,6 +821,7 @@ const Checkout = () => {
 
       <StoreFooter />
       <CheckoutChatWidget sessionId={sessionId} />
+      <PaymentRedirectOverlay open={redirecting} gatewayName={paymentMethod === "bkash" ? "bKash" : paymentMethod === "nagad" ? "Nagad" : "SSLCOMMERZ"} />
     </div>
   );
 };
