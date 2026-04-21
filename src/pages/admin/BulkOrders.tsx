@@ -169,9 +169,18 @@ const BulkOrders = () => {
                       <span>{format(new Date(o.created_at), "PP p")}</span>
                     </div>
                   </div>
-                  <div className="flex gap-1">
-                    <Button size="sm" variant="outline" onClick={() => setSelected(o)}><Eye className="h-3.5 w-3.5" /></Button>
-                    <Button size="sm" variant="outline" onClick={() => deleteOrder(o.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                  <div className="flex items-center gap-1">
+                    <Select value={o.status} onValueChange={(v) => updateStatus(o.id, v)}>
+                      <SelectTrigger className="w-32 h-8 text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="new">New</SelectItem>
+                        <SelectItem value="contacted">Contacted</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button size="sm" variant="outline" onClick={() => setSelected(o)} title="View details"><Eye className="h-3.5 w-3.5" /></Button>
+                    <Button size="sm" variant="outline" onClick={() => deleteOrder(o.id)} title="Delete"><Trash2 className="h-3.5 w-3.5" /></Button>
                   </div>
                 </div>
               ))}
